@@ -41,6 +41,7 @@ export class Game {
   score = 0;
   round = 1;
   private lastFoodSpawnTime = 0;
+  private showTutorial = true;
   private roundClearInfo: {
     lastPopTime: number;
     segmentScore: number;
@@ -120,6 +121,10 @@ export class Game {
   }
 
   private handleAction() {
+    if (this.showTutorial) {
+      this.showTutorial = false;
+      return;
+    }
     if (this.state === 'ready') {
       this.state = 'playing';
     } else if (this.state === 'game_over') {
@@ -281,6 +286,7 @@ export class Game {
       this.state,
       dt,
       clearBonus,
+      this.showTutorial,
     );
   }
 }
