@@ -2,18 +2,25 @@ import { GameState } from '../types';
 import { Snake } from '../entities/Snake';
 import { FoodManager } from '../entities/Food';
 import { FoodSpawner } from '../entities/FoodSpawner';
-import { CollisionSystem } from '../systems/CollisionSystem';
+import { CollisionSystem, wrapPos } from '../systems/CollisionSystem';
 import { MergeSystem } from '../systems/MergeSystem';
 import { DecaySystem } from '../systems/DecaySystem';
-import { RoundSystem } from '../systems/RoundSystem';
 import { InputManager } from './InputManager';
 import { GameLoop } from './GameLoop';
 import { Renderer } from '../rendering/Renderer';
 import {
   CANVAS_WIDTH, CANVAS_HEIGHT, SNAKE_TICK_MS,
-  INITIAL_LIVES,
-  GRID_COLS, PLAY_Y_OFFSET, PLAY_ROWS, CELL_SIZE,
+  CELL_SIZE, MAX_FOOD_VALUE,
+  ROUND_1_TARGET_SCORE, ROUND_SCORE_MULTIPLIER,
+  ROUND_SPEED_DECREASE, MIN_TICK_MS,
+  GRID_COLS, HUD_ROWS,
 } from '../constants';
+
+// HUD button bounds
+const BTN_W = 100;
+const BTN_H = 36;
+const BTN_X = GRID_COLS * CELL_SIZE - BTN_W - 10;
+const BTN_Y = (HUD_ROWS * CELL_SIZE - BTN_H) / 2;
 
 export class Game {
   private ctx: CanvasRenderingContext2D;
@@ -24,13 +31,14 @@ export class Game {
   private mergeSystem = new MergeSystem();
   // @ts-ignore reserved for hard mode
   private decaySystem = new DecaySystem();
-  private roundSystem = new RoundSystem();
   private input: InputManager;
   private loop: GameLoop;
   private renderer = new Renderer();
 
-  private state: GameState = 'round_start';
-  private lives = INITIAL_LIVES;
+  private state: GameState = 'ready';
+  score = 0;
+  round = 1;
+  maxFoodValue = MAX_FOOD_VALUE;
 
   constructor(canvas: HTMLCanvasElement) {
     canvas.width = CANVAS_WIDTH;
@@ -41,43 +49,96 @@ export class Game {
     this.loop = new GameLoop(SNAKE_TICK_MS, () => this.tick(), (dt) => this.render(dt));
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === ' ') this.handleAction();
+      if (e.key === ' ') {
+        if (this.state === 'playing') {
+          this.spawnMergeItem();
+        } else {
+          this.handleAction();
+        }
+      }
+      if (e.key === 'Enter' && this.advanceReady && this.state === 'playing') this.advanceRound();
     });
-    canvas.addEventListener('touchstart', () => {
-      if (this.state !== 'playing' && this.state !== 'merging') {
+    canvas.addEventListener('touchstart', (e) => {
+      if (this.state === 'ready' || this.state === 'game_over') {
         this.handleAction();
+        return;
+      }
+      // Check HUD button tap
+      if (this.advanceReady && this.state === 'playing') {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const tx = (touch.clientX - rect.left) * scaleX;
+        const ty = (touch.clientY - rect.top) * scaleY;
+        if (tx >= BTN_X && tx <= BTN_X + BTN_W && ty >= BTN_Y && ty <= BTN_Y + BTN_H) {
+          e.preventDefault();
+          this.advanceRound();
+        }
+      }
+    }, { passive: false });
+    canvas.addEventListener('click', (e) => {
+      if (this.advanceReady && this.state === 'playing') {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const cx = (e.clientX - rect.left) * scaleX;
+        const cy = (e.clientY - rect.top) * scaleY;
+        if (cx >= BTN_X && cx <= BTN_X + BTN_W && cy >= BTN_Y && cy <= BTN_Y + BTN_H) {
+          this.advanceRound();
+        }
       }
     });
 
-    this.startRound();
+    this.initGame();
     this.loop.start();
   }
 
+  get targetScore(): number {
+    return Math.floor(ROUND_1_TARGET_SCORE * Math.pow(ROUND_SCORE_MULTIPLIER, this.round - 1));
+  }
+
+  get advanceReady(): boolean {
+    return this.score >= this.targetScore;
+  }
+
+  get tickMs(): number {
+    return Math.max(MIN_TICK_MS, SNAKE_TICK_MS - (this.round - 1) * ROUND_SPEED_DECREASE);
+  }
+
   private handleAction() {
-    if (this.state === 'round_start') {
+    if (this.state === 'ready') {
       this.state = 'playing';
     } else if (this.state === 'game_over') {
-      this.resetGame();
-    } else if (this.state === 'round_clear') {
-      this.roundSystem.advanceRound();
-      this.startRound();
+      this.initGame();
+      this.state = 'playing';
     }
   }
 
-  private startRound() {
-    const config = this.roundSystem.getRoundConfig();
-    this.snake.reset(config.round);
-    this.food.clear();
-    this.foodSpawner.spawn(this.food, this.snake);
-    this.loop.setTickMs(config.tickMs);
-    this.state = 'round_start';
+  // DEBUG: spawn merge item on space
+  private spawnMergeItem() {
+    this.foodSpawner.spawnMerge(this.food, this.snake);
   }
 
-  private resetGame() {
-    this.roundSystem = new RoundSystem();
-    this.lives = INITIAL_LIVES;
+  private initGame() {
+    this.snake.reset();
+    this.food.clear();
+    this.round = 1;
+    this.maxFoodValue = MAX_FOOD_VALUE;
+    this.foodSpawner.spawn(this.food, this.snake, this.maxFoodValue);
+    this.score = 0;
     this.mergeSystem = new MergeSystem();
-    this.startRound();
+    this.loop.setTickMs(this.tickMs);
+    this.state = 'ready';
+  }
+
+  private advanceRound() {
+    this.round++;
+    this.maxFoodValue++;
+    this.loop.setTickMs(this.tickMs);
+    this.food.clear();
+    this.foodSpawner.spawn(this.food, this.snake, this.maxFoodValue);
+    this.state = 'ready';
   }
 
   private tick() {
@@ -86,17 +147,17 @@ export class Game {
     const dir = this.input.consumeDirection();
     this.snake.direction = dir;
 
-    // Check collision before moving
-    const result = this.collision.check(this.snake, this.food, this.roundSystem.fenceActive);
+    const result = this.collision.check(this.snake, this.food);
 
-    if (result.wall || result.self) {
-      this.loseLife();
+    if (result.self) {
+      this.state = 'game_over';
+      this.snake.alive = false;
       return;
     }
 
     if (result.food && result.foodDangerous) {
-      // Eating dangerous food
-      this.loseLife();
+      this.state = 'game_over';
+      this.snake.alive = false;
       return;
     }
 
@@ -104,69 +165,42 @@ export class Game {
       const eaten = this.food.removeAt(result.food.pos)!;
 
       if (eaten.type === 'removal') {
-        // Removal block: move without growing, then pop tail
         this.snake.move();
+        this.wrapHead();
         if (this.snake.segments.length > 1) {
           this.snake.segments.pop();
         }
-      } else {
-        // Normal food: move and grow
-        this.snake.eat(eaten.value);
-
-        // Start merge scan
+      } else if (eaten.type === 'merge') {
+        this.snake.move();
+        this.wrapHead();
         if (this.mergeSystem.startMergeScan(this.snake)) {
           this.state = 'merging';
         }
+      } else {
+        this.snake.eat(eaten.value);
+        this.wrapHead();
       }
 
-      // Spawn replacement
-      this.foodSpawner.spawnSingle(this.food, this.snake);
+      this.foodSpawner.spawnSingle(this.food, this.snake, this.maxFoodValue);
     } else {
-      // Normal move
       this.snake.move();
-
-      // Check if snake exited through the right side (round clear)
-      if (!this.roundSystem.fenceActive && this.snake.head.pos.x >= GRID_COLS) {
-        this.state = 'round_clear';
-        return;
-      }
-
-      // Wrap around if fence is off and exiting (top/bottom/left for now just right exit)
-      if (!this.roundSystem.fenceActive) {
-        const h = this.snake.head;
-        if (h.pos.x < 0) h.pos.x = GRID_COLS - 1;
-        if (h.pos.y < PLAY_Y_OFFSET) h.pos.y = PLAY_Y_OFFSET + PLAY_ROWS - 1;
-        if (h.pos.y >= PLAY_Y_OFFSET + PLAY_ROWS) h.pos.y = PLAY_Y_OFFSET;
-      }
+      this.wrapHead();
     }
-
-    // Tail decay (disabled — reserved for hard mode)
-    // if (this.state === 'playing' && this.decaySystem.update(this.snake)) {
-    //   this.loseLife();
-    //   return;
-    // }
   }
 
-  private loseLife() {
-    this.lives--;
-    if (this.lives <= 0) {
-      this.state = 'game_over';
-      this.snake.alive = false;
-    } else {
-      // Respawn snake
-      this.snake.reset(this.roundSystem.getRoundConfig().round);
-      this.input.setDirection(this.snake.direction);
-    }
+  private wrapHead() {
+    const h = this.snake.head;
+    const wrapped = wrapPos(h.pos);
+    h.pos.x = wrapped.x;
+    h.pos.y = wrapped.y;
   }
 
   private render(dt: number) {
     const now = performance.now();
 
-    // Update merge animation
     if (this.state === 'merging') {
       const stillMerging = this.mergeSystem.update(this.snake, now);
       if (!stillMerging) {
-        // Spawn particles for completed merges
         const merges = this.mergeSystem.consumeCompletedMerges();
         for (const m of merges) {
           this.renderer.mergeAnimator.spawnBurst(
@@ -176,10 +210,7 @@ export class Game {
           );
         }
 
-        // Collect score
-        const score = this.mergeSystem.consumeScore();
-        this.roundSystem.addScore(score);
-
+        this.score += this.mergeSystem.consumeScore();
         this.state = 'playing';
       }
     }
@@ -189,8 +220,10 @@ export class Game {
       this.snake,
       this.food,
       this.mergeSystem,
-      this.roundSystem,
-      this.lives,
+      this.score,
+      this.round,
+      this.targetScore,
+      this.advanceReady,
       this.state,
       dt,
     );
