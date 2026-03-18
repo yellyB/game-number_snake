@@ -8,6 +8,7 @@ import { Snake } from '../entities/Snake';
 import { FoodManager } from '../entities/Food';
 import { MergeSystem } from '../systems/MergeSystem';
 import { GameState } from '../types';
+import { JoystickState } from '../core/InputManager';
 import { CANVAS_WIDTH, CANVAS_HEIGHT, COLOR_BG } from '../constants';
 
 export class Renderer {
@@ -30,6 +31,7 @@ export class Renderer {
     _dt: number,
     roundClearBonus = 0,
     showTutorial = false,
+    joystick?: JoystickState,
   ) {
     ctx.fillStyle = COLOR_BG;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -42,6 +44,10 @@ export class Renderer {
 
     this.mergeAnimator.update(1 / 60);
     this.mergeAnimator.render(ctx);
+
+    if (joystick?.active) {
+      this.renderJoystick(ctx, joystick);
+    }
 
     if (state === 'game_over') {
       this.renderOverlay(ctx, 'GAME OVER', `Score: ${score} — Press SPACE or tap`, '#e94560');
@@ -208,6 +214,47 @@ export class Renderer {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(char, x, y);
+  }
+
+  private renderJoystick(ctx: CanvasRenderingContext2D, joy: JoystickState) {
+    // Convert screen coords to canvas coords
+    const canvas = ctx.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const cx = (joy.centerX - rect.left) * scaleX;
+    const cy = (joy.centerY - rect.top) * scaleY;
+    const tx = (joy.thumbX - rect.left) * scaleX;
+    const ty = (joy.thumbY - rect.top) * scaleY;
+
+    const baseR = 50;
+    const thumbR = 22;
+
+    // Clamp thumb to base radius
+    let dx = tx - cx;
+    let dy = ty - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > baseR) {
+      dx = dx / dist * baseR;
+      dy = dy / dist * baseR;
+    }
+
+    // Base circle
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, baseR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Thumb circle
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(cx + dx, cy + dy, thumbR, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
   }
 
   private renderRoundClear(ctx: CanvasRenderingContext2D, round: number, bonus: number) {

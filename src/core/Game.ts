@@ -256,6 +256,7 @@ export class Game {
       dt,
       clearBonus,
       this.showTutorial,
+      this.input.joystick,
     );
   }
 }
