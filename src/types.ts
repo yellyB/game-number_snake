@@ -19,7 +19,7 @@ export const DIR_VECTORS: Record<Direction, Vec2> = {
   [Direction.Left]: { x: -1, y: 0 },
 };
 
-export type GameState = 'ready' | 'playing' | 'merging' | 'game_over';
+export type GameState = 'ready' | 'playing' | 'merging' | 'round_clear' | 'game_over';
 
 export interface FoodItem {
   pos: Vec2;

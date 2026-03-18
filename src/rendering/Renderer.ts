@@ -29,6 +29,7 @@ export class Renderer {
     advanceReady: boolean,
     state: GameState,
     _dt: number,
+    roundClearBonus = 0,
   ) {
     ctx.fillStyle = COLOR_BG;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -44,8 +45,27 @@ export class Renderer {
 
     if (state === 'game_over') {
       this.renderOverlay(ctx, 'GAME OVER', `Score: ${score} — Press SPACE or tap`, '#e94560');
+    } else if (state === 'round_clear') {
+      this.renderRoundClear(ctx, round, roundClearBonus);
     } else if (state === 'ready') {
       this.renderOverlay(ctx, `ROUND ${round}`, 'Press SPACE or tap to start', '#00d2ff');
+    }
+  }
+
+  private renderRoundClear(ctx: CanvasRenderingContext2D, round: number, bonus: number) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    ctx.fillStyle = '#4ecca3';
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`ROUND ${round} CLEAR!`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
+
+    if (bonus > 0) {
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 24px monospace';
+      ctx.fillText(`+${bonus} BONUS`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 30);
     }
   }
 

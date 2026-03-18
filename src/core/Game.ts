@@ -13,6 +13,8 @@ import {
   CELL_SIZE, MAX_FOOD_VALUE,
   ROUND_1_TARGET_SCORE, ROUND_SCORE_MULTIPLIER,
   ROUND_SPEED_DECREASE, MIN_TICK_MS,
+  ROUND_CLEAR_POP_MS, ROUND_CLEAR_BONUS_BASE, MERGE_BASE_SCORE,
+  FOOD_SPAWN_INTERVAL_MS, FOOD_COUNT_MAX,
   GRID_COLS, HUD_ROWS,
 } from '../constants';
 
@@ -39,6 +41,14 @@ export class Game {
   score = 0;
   round = 1;
   maxFoodValue = MAX_FOOD_VALUE;
+  private lastFoodSpawnTime = 0;
+  private roundClearInfo: {
+    lastPopTime: number;
+    segmentScore: number;
+    bonus: number;
+    phase: 'popping' | 'showing';
+    showStartTime: number;
+  } | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     canvas.width = CANVAS_WIDTH;
@@ -127,18 +137,21 @@ export class Game {
     this.maxFoodValue = MAX_FOOD_VALUE;
     this.foodSpawner.spawn(this.food, this.snake, this.maxFoodValue);
     this.score = 0;
+    this.lastFoodSpawnTime = performance.now();
     this.mergeSystem = new MergeSystem();
     this.loop.setTickMs(this.tickMs);
     this.state = 'ready';
   }
 
   private advanceRound() {
-    this.round++;
-    this.maxFoodValue++;
-    this.loop.setTickMs(this.tickMs);
-    this.food.clear();
-    this.foodSpawner.spawn(this.food, this.snake, this.maxFoodValue);
-    this.state = 'ready';
+    this.state = 'round_clear';
+    this.roundClearInfo = {
+      lastPopTime: performance.now(),
+      segmentScore: 0,
+      bonus: this.round * ROUND_CLEAR_BONUS_BASE,
+      phase: 'popping',
+      showStartTime: 0,
+    };
   }
 
   private tick() {
@@ -181,10 +194,16 @@ export class Game {
         this.wrapHead();
       }
 
-      this.foodSpawner.spawnSingle(this.food, this.snake, this.maxFoodValue);
     } else {
       this.snake.move();
       this.wrapHead();
+    }
+
+    // Spawn food over time
+    const now = performance.now();
+    if (this.food.items.length < FOOD_COUNT_MAX && now - this.lastFoodSpawnTime >= FOOD_SPAWN_INTERVAL_MS) {
+      this.foodSpawner.spawnSingle(this.food, this.snake, this.maxFoodValue);
+      this.lastFoodSpawnTime = now;
     }
   }
 
@@ -215,6 +234,40 @@ export class Game {
       }
     }
 
+    if (this.state === 'round_clear' && this.roundClearInfo) {
+      const info = this.roundClearInfo;
+      if (info.phase === 'popping') {
+        if (this.snake.segments.length > 1 && now - info.lastPopTime >= ROUND_CLEAR_POP_MS) {
+          const seg = this.snake.segments.pop()!;
+          const points = seg.value * MERGE_BASE_SCORE;
+          info.segmentScore += points;
+          this.score += points;
+          this.renderer.mergeAnimator.spawnBurst(
+            seg.pos.x * CELL_SIZE, seg.pos.y * CELL_SIZE, seg.value,
+          );
+          info.lastPopTime = now;
+        }
+        if (this.snake.segments.length <= 1) {
+          this.score += info.bonus;
+          info.phase = 'showing';
+          info.showStartTime = now;
+        }
+      } else if (info.phase === 'showing') {
+        if (now - info.showStartTime > 1500) {
+          this.round++;
+          this.maxFoodValue++;
+          this.loop.setTickMs(this.tickMs);
+          this.food.clear();
+          this.foodSpawner.spawn(this.food, this.snake, this.maxFoodValue);
+          this.lastFoodSpawnTime = performance.now();
+          this.roundClearInfo = null;
+          this.state = 'ready';
+        }
+      }
+    }
+
+    const clearBonus = this.roundClearInfo?.phase === 'showing' ? this.roundClearInfo.bonus : 0;
+
     this.renderer.render(
       this.ctx,
       this.snake,
@@ -226,6 +279,7 @@ export class Game {
       this.advanceReady,
       this.state,
       dt,
+      clearBonus,
     );
   }
 }

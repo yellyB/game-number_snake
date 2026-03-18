@@ -17,7 +17,9 @@ export const MERGE_DELAY_MS = MERGE_GLOW_MS + MERGE_SHRINK_MS; // 300 total per 
 // Gameplay
 export const DECAY_DISTANCE = 16;
 export const INITIAL_LIVES = 1;
-export const FOOD_COUNT_TARGET = 8;
+export const FOOD_COUNT_MAX = 30;
+export const FOOD_INITIAL_COUNT = 3;
+export const FOOD_SPAWN_INTERVAL_MS = 2000; // time between each food spawn
 
 // Scoring
 export const MERGE_BASE_SCORE = 10;
@@ -28,6 +30,8 @@ export const ROUND_1_TARGET_SCORE = 300;
 export const ROUND_SCORE_MULTIPLIER = 1.8;
 export const ROUND_SPEED_DECREASE = 30; // ms faster per round
 export const MIN_TICK_MS = 150;
+export const ROUND_CLEAR_POP_MS = 100; // ms between each segment pop
+export const ROUND_CLEAR_BONUS_BASE = 50; // bonus = round * this
 
 // Colors
 export const COLOR_BG = '#1a1a2e';
