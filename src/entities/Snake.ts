@@ -12,13 +12,11 @@ export class Snake {
     this.reset();
   }
 
-  reset(round = 1) {
+  reset() {
     const startX = 5;
     const startY = PLAY_Y_OFFSET + Math.floor(PLAY_ROWS / 2);
-    const base = round; // round 1: head=2,tail=1 / round 2: head=3,tail=2
     this.segments = [
-      { pos: { x: startX, y: startY }, value: base + 1 },
-      { pos: { x: startX - 1, y: startY }, value: base },
+      { pos: { x: startX, y: startY }, value: 1 },
     ];
     this.direction = Direction.Right;
     this.alive = true;

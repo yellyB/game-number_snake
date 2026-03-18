@@ -56,60 +56,159 @@ export class Renderer {
   }
 
   private renderTutorial(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillStyle = 'rgba(0,0,0,0.88)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     const cx = CANVAS_WIDTH / 2;
-    let y = 100;
-    const gap = 38;
+    const S = 26;
+    const step = S + 2;
 
-    ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Title
+    // ── Title ──
     ctx.fillStyle = '#00d2ff';
-    ctx.font = 'bold 30px monospace';
-    ctx.fillText('HOW TO PLAY', cx, y);
-    y += gap * 1.6;
+    ctx.font = 'bold 28px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('HOW TO PLAY', cx, 50);
 
-    // Movement
-    ctx.fillStyle = '#eee';
-    ctx.font = '15px monospace';
-    ctx.fillText('Swipe or Arrow Keys to move', cx, y);
-    y += gap * 1.4;
-
-    // Eat rules
-    ctx.fillStyle = '#4ecca3';
-    ctx.font = 'bold 17px monospace';
-    ctx.fillText('Eat  ≤ HEAD  →  Grow!', cx, y);
-    y += gap;
-    ctx.fillStyle = '#e94560';
-    ctx.fillText('Eat  > HEAD  →  Death!', cx, y);
-    y += gap * 1.4;
-
-    // Merge
-    ctx.fillStyle = '#ffd700';
-    ctx.font = 'bold 17px monospace';
-    ctx.fillText('◆ M   Merge equal neighbors', cx, y);
-    y += gap * 0.8;
     ctx.fillStyle = '#aaa';
     ctx.font = '14px monospace';
-    ctx.fillText('[1][1]→[2]   [2][2]→[3]', cx, y);
-    y += gap * 0.7;
-    ctx.fillText('Merge = Score!', cx, y);
-    y += gap * 1.3;
+    ctx.fillText('Swipe or ← ↑ ↓ → to move', cx, 85);
 
-    // Scissors
-    ctx.fillStyle = '#b388ff';
-    ctx.font = 'bold 17px monospace';
-    ctx.fillText('✂  Cuts your tail', cx, y);
-    y += gap * 2;
+    // ── Safe eat: [1][2][3] → (2) ✓ Grow! ──
+    let y = 125;
+    let x = cx - 115;
+    this.tSeg(ctx, x, y, 1, false, S); x += step;
+    this.tSeg(ctx, x, y, 2, false, S); x += step;
+    this.tSeg(ctx, x, y, 3, true, S); x += step + 10;
+    this.tLabel(ctx, x, y + S / 2, '→'); x += 20;
+    this.tFood(ctx, x, y, 2, '#4ecca3', S); x += step + 10;
+    ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 15px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('✓ Grow!', x, y + S / 2);
 
-    // Tap prompt
+    // ── Danger eat: [1][2][3] → (5) ✗ Death! ──
+    y = 170;
+    x = cx - 115;
+    this.tSeg(ctx, x, y, 1, false, S); x += step;
+    this.tSeg(ctx, x, y, 2, false, S); x += step;
+    this.tSeg(ctx, x, y, 3, true, S); x += step + 10;
+    this.tLabel(ctx, x, y + S / 2, '→'); x += 20;
+    this.tFood(ctx, x, y, 5, '#e94560', S); x += step + 10;
+    ctx.fillStyle = '#e94560'; ctx.font = 'bold 15px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('✗ Death!', x, y + S / 2);
+
+    ctx.textAlign = 'center'; ctx.fillStyle = '#666'; ctx.font = '12px monospace';
+    ctx.fillText('HEAD is 3: eat ≤ 3 OK, > 3 kills you', cx, y + S + 16);
+
+    // ── Merge header ──
+    y = 250;
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 15px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('◆ M = Merge Trigger', cx, y);
+
+    // [1][1] + M → [2]  Score!
+    y = 280;
+    x = cx - 115;
+    this.tSeg(ctx, x, y, 1, false, S); x += step;
+    this.tSeg(ctx, x, y, 1, true, S); x += step + 4;
+    this.tLabel(ctx, x + 4, y + S / 2, '+'); x += 16;
+    this.tMergeItem(ctx, x, y, S); x += step + 4;
+    this.tLabel(ctx, x + 4, y + S / 2, '→'); x += 16;
+    this.tSeg(ctx, x, y, 2, true, S); x += step + 8;
+    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 15px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('Score!', x, y + S / 2);
+
+    ctx.textAlign = 'center'; ctx.fillStyle = '#666'; ctx.font = '12px monospace';
+    ctx.fillText('Same numbers merge! 1+1→2, 2+2→3...', cx, y + S + 16);
+
+    // ── Scissors: [1][2][3] → ✂ → [2][3]  Cut! ──
+    y = 360;
+    x = cx - 120;
+    this.tSeg(ctx, x, y, 1, false, S); x += step;
+    this.tSeg(ctx, x, y, 2, false, S); x += step;
+    this.tSeg(ctx, x, y, 3, true, S); x += step + 4;
+    this.tLabel(ctx, x + 4, y + S / 2, '→'); x += 16;
+    this.tScissors(ctx, x, y, S); x += step + 4;
+    this.tLabel(ctx, x + 4, y + S / 2, '→'); x += 16;
+    this.tSeg(ctx, x, y, 2, false, S); x += step;
+    this.tSeg(ctx, x, y, 3, true, S); x += step + 8;
+    ctx.fillStyle = '#b388ff'; ctx.font = 'bold 15px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('Cut!', x, y + S / 2);
+
+    // ── Tap prompt ──
     const pulse = Math.sin(performance.now() / 400) * 0.3 + 0.7;
     ctx.fillStyle = `rgba(255,255,255,${pulse})`;
-    ctx.font = '16px monospace';
-    ctx.fillText('Tap or press SPACE', cx, y);
+    ctx.font = '16px monospace'; ctx.textAlign = 'center';
+    ctx.fillText('Tap or press SPACE', cx, 440);
+  }
+
+  // ── Tutorial mini drawing helpers ──
+
+  private tSeg(ctx: CanvasRenderingContext2D, x: number, y: number, value: number, isHead: boolean, s: number) {
+    ctx.fillStyle = isHead ? '#e94560' : '#533483';
+    ctx.beginPath();
+    ctx.roundRect(x + 1, y + 1, s - 2, s - 2, isHead ? 5 : 3);
+    ctx.fill();
+    if (isHead) {
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.floor(s * 0.5)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(value), x + s / 2, y + s / 2);
+  }
+
+  private tFood(ctx: CanvasRenderingContext2D, x: number, y: number, value: number, color: string, s: number) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x + s / 2, y + s / 2, s * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.floor(s * 0.45)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(value), x + s / 2, y + s / 2);
+  }
+
+  private tMergeItem(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+    const mcx = x + s / 2;
+    const mcy = y + s / 2;
+    const r = s * 0.38;
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.moveTo(mcx, mcy - r);
+    ctx.lineTo(mcx + r, mcy);
+    ctx.lineTo(mcx, mcy + r);
+    ctx.lineTo(mcx - r, mcy);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#1a1a2e';
+    ctx.font = `bold ${Math.floor(s * 0.45)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('M', mcx, mcy);
+  }
+
+  private tScissors(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+    ctx.fillStyle = '#b388ff';
+    ctx.beginPath();
+    ctx.arc(x + s / 2, y + s / 2, s * 0.38, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.floor(s * 0.5)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('✂', x + s / 2, y + s / 2);
+  }
+
+  private tLabel(ctx: CanvasRenderingContext2D, x: number, y: number, char: string) {
+    ctx.fillStyle = '#555';
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(char, x, y);
   }
 
   private renderRoundClear(ctx: CanvasRenderingContext2D, round: number, bonus: number) {
