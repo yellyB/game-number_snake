@@ -1,29 +1,6 @@
 # Known Issues
 
-## 1. 라이프 잃은 후 음식 겹침
-
-**상태:** 보류 (의도적)
-
-**현상:**
-라이프를 잃으면 뱀이 `(5, 9), (4, 9), (3, 9)` 위치로 리셋되지만, 기존 음식은 그대로 남아있다.
-만약 리셋 위치에 음식이 있으면 뱀과 음식이 같은 칸에 겹쳐서 렌더링된다.
-충돌 체크는 "다음 이동할 위치"만 보기 때문에 겹친 음식은 먹히지 않고 그대로 남는다.
-
-**영향:** 시각적 겹침만 발생. 게임 로직에는 영향 없음.
-
-**수정 방법:**
-`src/core/Game.ts`의 `loseLife()`에서 뱀 리셋 후 겹치는 음식을 제거하면 된다.
-
-```typescript
-// loseLife() 내부, snake.reset() 이후에 추가
-for (const seg of this.snake.segments) {
-  this.food.removeAt(seg.pos);
-}
-```
-
----
-
-## 2. Decay 시스템 비활성화 상태
+## 1. Decay 시스템 비활성화 상태
 
 **상태:** 기능 구현 완료, 현재 OFF
 
@@ -32,46 +9,31 @@ for (const seg of this.snake.segments) {
 
 **관련 파일:**
 - `src/systems/DecaySystem.ts` — decay 로직 (코드 유지)
-- `src/core/Game.ts` — `tick()` 내 decay 호출부 주석 처리됨
-
-**활성화 방법:**
-`src/core/Game.ts`에서 아래 주석을 해제하면 된다.
-
-```typescript
-// Tail decay (disabled — reserved for hard mode)
-// if (this.state === 'playing' && this.decaySystem.update(this.snake)) {
-//   this.loseLife();
-//   return;
-// }
-```
-
-**참고:** decay 활성화 시, 합체 중(`state === 'merging'`)에는 decay가 스킵되도록 이미 처리되어 있음.
+- `src/core/Game.ts` — `@ts-ignore reserved for hard mode` 주석으로 DecaySystem 인스턴스 유지
 
 ---
 
-## 3. 제거 블럭 decay 이중 페널티
+## 2. 합체 시 세그먼트 위치 빈 칸
 
-**상태:** 보류 (decay 활성화 시 검토 필요)
+**상태:** 보류
 
 **현상:**
-제거 블럭을 먹으면:
-- 꼬리 세그먼트 1개 제거 (손해 1)
-- decay 카운터 +1 (손해 2)
+합체로 세그먼트가 제거되면 값은 합쳐지지만 위치(pos)는 그대로라서, 중간에 빈 칸이 생길 수 있음.
+예: 5칸 뱀에서 2개가 합쳐지면 4칸인데, 위치가 1-2-4-5처럼 3이 빠짐.
 
-일반 이동이나 먹이 먹을 때도 동일하게 decay 카운터가 +1 되므로,
-제거 블럭만 특별히 이중 페널티를 받는 건 아니지만, 보상 없이 꼬리를 잃는 상황에서 추가 부담이 된다.
-
-**영향:** 밸런스 문제. 제거 블럭 사용이 지나치게 불리하다고 느껴질 수 있음.
+**영향:** 시각적으로 뱀이 끊어져 보일 수 있음.
 
 **수정 방법:**
-`src/core/Game.ts`의 removal 블럭 분기에서 `move()` 호출 후 카운터를 되돌리면 된다.
+합체 적용 후 남은 세그먼트들의 위치를 머리부터 꼬리 방향으로 재정렬하면 됨.
 
-```typescript
-if (eaten.type === 'removal') {
-  this.snake.move();
-  this.snake.distanceSinceDecay--; // decay 페널티 상쇄
-  if (this.snake.segments.length > 1) {
-    this.snake.segments.pop();
-  }
-}
-```
+---
+
+## 3. DEBUG: 스페이스 키 M 아이템 스폰
+
+**상태:** 개발용, 릴리즈 전 제거 필요
+
+**현상:**
+플레이 중 스페이스 키를 누르면 M 아이템이 강제 스폰됨.
+
+**관련 파일:**
+- `src/core/Game.ts` — `spawnMergeItem()` 메서드 및 keydown 핸들러
