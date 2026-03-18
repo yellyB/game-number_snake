@@ -11,8 +11,8 @@ import { Direction, GameState } from '../types';
 import { JoystickState, DPAD_RECTS } from '../core/InputManager';
 import { getValueColor } from '../utils/colors';
 import {
-  CANVAS_WIDTH, CANVAS_HEIGHT, GRID_HEIGHT, CELL_SIZE, COLOR_BG, COLOR_HUD_BG,
-  COLOR_SNAKE_HEAD, GRID_COLS, PLAY_Y_OFFSET, PLAY_ROWS, DPAD_BTN_SIZE,
+  CANVAS_WIDTH, CANVAS_HEIGHT, GRID_HEIGHT, COLOR_BG, COLOR_HUD_BG,
+  COLOR_SNAKE_HEAD, DPAD_BTN_SIZE, DPAD_AREA_HEIGHT,
 } from '../constants';
 
 export class Renderer {
@@ -44,10 +44,6 @@ export class Renderer {
     this.hudRenderer.render(ctx, snake, score, round, targetScore);
     this.grid.render(ctx);
     this.wallRenderer.render(ctx);
-
-    // Segment info on right side of play area (after grid, before food/snake)
-    this.renderSegmentList(ctx, snake);
-
     this.foodRenderer.render(ctx, food, snake);
     this.snakeRenderer.render(ctx, snake, mergeSystem);
 
@@ -56,6 +52,9 @@ export class Renderer {
 
     // D-pad (always visible)
     this.renderDpad(ctx, activeDpadDir ?? null);
+
+    // Segment info on right side of D-pad area (outside play map)
+    this.renderSegmentList(ctx, snake);
 
     if (joystick?.active) {
       this.renderJoystick(ctx, joystick);
@@ -75,8 +74,6 @@ export class Renderer {
   // ── Segment list on right side of play area ──
 
   private renderSegmentList(ctx: CanvasRenderingContext2D, snake: Snake) {
-    const width = GRID_COLS * CELL_SIZE;
-    const playTop = PLAY_Y_OFFSET * CELL_SIZE;
     const segs = snake.segments;
 
     const groups: { value: number; count: number }[] = [];
@@ -88,18 +85,19 @@ export class Renderer {
       }
     }
 
-    const boxSize = 16;
-    const rowH = 22;
-    const maxGroups = Math.min(groups.length, Math.floor(PLAY_ROWS * CELL_SIZE / rowH));
-    const rightX = width - 4;
+    const boxSize = 14;
+    const rowH = 20;
+    const maxGroups = Math.min(groups.length, Math.floor(DPAD_AREA_HEIGHT / rowH));
+    const rightX = CANVAS_WIDTH - 6;
+    const startY = GRID_HEIGHT + 8;
 
     for (let i = 0; i < maxGroups; i++) {
       const g = groups[i];
-      const centerY = playTop + 12 + i * rowH;
+      const centerY = startY + i * rowH + boxSize / 2;
 
       // xN count label
       ctx.fillStyle = '#555';
-      ctx.font = 'bold 10px monospace';
+      ctx.font = 'bold 9px monospace';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
       const countStr = `x${g.count}`;
@@ -110,15 +108,13 @@ export class Renderer {
       const bx = rightX - countW - boxSize - 2;
       const by = centerY - boxSize / 2;
       const isHead = i === 0;
-      ctx.globalAlpha = 0.65;
       ctx.fillStyle = isHead ? COLOR_SNAKE_HEAD : getValueColor(g.value);
       ctx.beginPath();
-      ctx.roundRect(bx, by, boxSize, boxSize, 3);
+      ctx.roundRect(bx, by, boxSize, boxSize, 2);
       ctx.fill();
-      ctx.globalAlpha = 1;
 
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 8px monospace';
+      ctx.font = 'bold 7px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(String(g.value), bx + boxSize / 2, centerY);
@@ -227,30 +223,31 @@ export class Renderer {
     // ── Row 3: Self-collision — U-shaped snake wrapping around and hitting tail ──
     y += 70;
     {
-      // 8-segment U-shape (3 cols × 3 rows)
-      // Path (tail→head): [1](0,0)→[2](1,0)→[1](2,0)→[2](2,1)→[1](2,2)→[2](1,2)→[1](0,2)→[3](0,1)
-      // Head [3] at (col0,row1) going UP → hits tail [1] at (col0,row0)
-      const gx = eatCol - 2 * step;
+      // 9-segment U-shape (4 cols top × 3 rows)
+      // Extra tail [1] at col0, collision at col1
+      // Head [3] at (col1,row1) going UP → hits [1] at (col1,row0)
+      const gx = eatCol - 3 * step;
       const r0 = y;
       const r1 = y + step;
       const r2 = y + 2 * step;
 
-      // Row 0 (top): tail going right [1]→[2]→[1]
+      // Row 0 (top): [1][1][2][1] — extra tail extends left
       this.tSeg(ctx, gx, r0, 1, false, S);
-      this.tSeg(ctx, gx + step, r0, 2, false, S);
-      this.tSeg(ctx, gx + 2 * step, r0, 1, false, S);
+      this.tSeg(ctx, gx + step, r0, 1, false, S);
+      this.tSeg(ctx, gx + 2 * step, r0, 2, false, S);
+      this.tSeg(ctx, gx + 3 * step, r0, 1, false, S);
 
-      // Row 1 (middle): head left, body right
-      this.tSeg(ctx, gx, r1, 3, true, S);
-      this.tSeg(ctx, gx + 2 * step, r1, 2, false, S);
+      // Row 1 (middle): head at col1, body at col3
+      this.tSeg(ctx, gx + step, r1, 3, true, S);
+      this.tSeg(ctx, gx + 3 * step, r1, 2, false, S);
 
-      // Row 2 (bottom): body going left [1]→[2]→[1]
-      this.tSeg(ctx, gx, r2, 1, false, S);
-      this.tSeg(ctx, gx + step, r2, 2, false, S);
-      this.tSeg(ctx, gx + 2 * step, r2, 1, false, S);
+      // Row 2 (bottom): body going left [1][2][1]
+      this.tSeg(ctx, gx + step, r2, 1, false, S);
+      this.tSeg(ctx, gx + 2 * step, r2, 2, false, S);
+      this.tSeg(ctx, gx + 3 * step, r2, 1, false, S);
 
-      // Collision: upward bite between head [3](row1) and tail [1](row0)
-      const collCx = gx + S / 2;
+      // Collision: upward bite between head [3](col1,row1) and [1](col1,row0)
+      const collCx = gx + step + S / 2;
       const collY = r0 + S;
       const t = (performance.now() % 800) / 800;
       const sz = 4;
@@ -264,27 +261,29 @@ export class Renderer {
       ctx.fill();
       ctx.globalAlpha = 1;
 
-      // X mark on tail (collision point)
+      // X mark on collision target [1] at col1
+      const tx = gx + step;
       ctx.strokeStyle = 'rgba(233,69,96,0.8)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(gx + 3, r0 + 3);
-      ctx.lineTo(gx + S - 3, r0 + S - 3);
-      ctx.moveTo(gx + S - 3, r0 + 3);
-      ctx.lineTo(gx + 3, r0 + S - 3);
+      ctx.moveTo(tx + 3, r0 + 3);
+      ctx.lineTo(tx + S - 3, r0 + S - 3);
+      ctx.moveTo(tx + S - 3, r0 + 3);
+      ctx.lineTo(tx + 3, r0 + S - 3);
       ctx.stroke();
 
-      // "✗ Death!" label
-      const textX = gx + 3 * step + 14;
+      // Arrow and Death label (same style as other rows)
+      let ax = gx + 4 * step + 14;
+      this.tArrow(ctx, ax, r1 + S / 2); ax += 24;
       ctx.fillStyle = '#e94560';
       ctx.font = 'bold 14px monospace';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText('✗ Death!', textX, r1 + S / 2);
+      ctx.fillText('✗ Death!', ax, r1 + S / 2);
     }
 
     // ── Row 4: Merge — [1][1][1] eats M → [1][2] Score! ──
-    y += 2 * step + 40; // extra space for U-shape
+    y += 2 * step + 70; // U-shape height (2*step) + standard row gap (70)
     x = eatCol - 3 * step - gap;
     this.tSeg(ctx, x, y, 1, false, S); x += step;
     this.tSeg(ctx, x, y, 1, false, S); x += step;
