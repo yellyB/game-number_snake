@@ -52,30 +52,62 @@ export class HudRenderer {
   }
 
   private renderTailPreview(ctx: CanvasRenderingContext2D, snake: Snake, y: number) {
-    ctx.textAlign = 'right';
-    ctx.fillStyle = COLOR_TEXT;
-    ctx.font = '11px monospace';
     const width = GRID_COLS * CELL_SIZE;
-    ctx.fillText('TAIL:', width - 140, y - 12);
-
-    const previewStart = width - 130;
-    const boxSize = 20;
     const segs = snake.segments;
-    const maxPreview = Math.min(segs.length, 6);
 
-    for (let i = 0; i < maxPreview; i++) {
-      const seg = segs[segs.length - 1 - i];
-      const bx = previewStart + i * (boxSize + 3);
-      const by = y - boxSize / 2 + 4;
+    // Build run-length groups from head (index 0) to tail
+    const groups: { value: number; count: number }[] = [];
+    for (const seg of segs) {
+      if (groups.length > 0 && groups[groups.length - 1].value === seg.value) {
+        groups[groups.length - 1].count++;
+      } else {
+        groups.push({ value: seg.value, count: 1 });
+      }
+    }
 
-      const isMatch = i > 0 && segs[segs.length - 1 - i].value === segs[segs.length - i].value;
+    // Draw groups left to right (head first)
+    const boxSize = 20;
+    const startX = width - 10;
+    let x = startX;
 
-      ctx.fillStyle = isMatch ? '#ffd369' : '#333';
+    // Measure total width first to right-align
+    const groupWidths: number[] = [];
+    const maxGroups = Math.min(groups.length, 8);
+    for (let i = 0; i < maxGroups; i++) {
+      const g = groups[i];
+      const countStr = `x${g.count}`;
+      ctx.font = 'bold 18px monospace';
+      const countW = ctx.measureText(countStr).width;
+      groupWidths.push(boxSize + countW + 4);
+    }
+    const totalW = groupWidths.reduce((a, b) => a + b, 0);
+    x = startX - totalW;
+
+    const centerY = y + 4;
+
+    for (let i = 0; i < maxGroups; i++) {
+      const g = groups[i];
+      const bx = x;
+      const by = centerY - boxSize / 2;
+
+      // Box
+      const isHead = i === 0;
+      ctx.fillStyle = isHead ? '#e94560' : '#333';
       ctx.fillRect(bx, by, boxSize, boxSize);
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(String(seg.value), bx + boxSize / 2, by + boxSize / 2 + 1);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(g.value), bx + boxSize / 2, centerY);
+
+      // xN label
+      ctx.fillStyle = '#888';
+      ctx.font = 'bold 18px monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`x${g.count}`, bx + boxSize + 1, centerY);
+
+      x += groupWidths[i];
     }
   }
 }
