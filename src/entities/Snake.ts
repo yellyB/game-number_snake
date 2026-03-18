@@ -13,7 +13,7 @@ export class Snake {
   }
 
   reset() {
-    const startX = 5;
+    const startX = Math.floor(GRID_COLS / 2);
     const startY = PLAY_Y_OFFSET + Math.floor(PLAY_ROWS / 2);
     this.segments = [
       { pos: { x: startX, y: startY }, value: 1 },

@@ -1,24 +1,7 @@
 import { Snake } from '../entities/Snake';
 import { MergeSystem } from '../systems/MergeSystem';
 import { CELL_SIZE, COLOR_SNAKE_HEAD, COLOR_MERGE_GLOW, GRID_COLS } from '../constants';
-
-const VALUE_COLORS: Record<number, string> = {
-  1: '#6c5ce7',
-  2: '#a29bfe',
-  4: '#fd79a8',
-  8: '#e17055',
-  16: '#fdcb6e',
-  32: '#00b894',
-  64: '#00cec9',
-  128: '#e84393',
-  256: '#d63031',
-  512: '#ffd32a',
-  1024: '#ff6b6b',
-};
-
-function getValueColor(value: number): string {
-  return VALUE_COLORS[value] || '#fab1a0';
-}
+import { getValueColor } from '../utils/colors';
 
 export class SnakeRenderer {
   render(ctx: CanvasRenderingContext2D, snake: Snake, mergeSystem: MergeSystem) {

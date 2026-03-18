@@ -1,12 +1,18 @@
-// Grid
-export const CANVAS_WIDTH = 800;
-export const CANVAS_HEIGHT = 640;
-export const CELL_SIZE = 40;
-export const GRID_COLS = 20;
-export const GRID_ROWS = 16;
-export const HUD_ROWS = 2;
-export const PLAY_ROWS = GRID_ROWS - HUD_ROWS; // 14
-export const PLAY_Y_OFFSET = HUD_ROWS; // play area starts at row 2
+// Grid — portrait layout for mobile
+export const CELL_SIZE = 30;
+export const GRID_COLS = 13;
+export const GRID_ROWS = 22;
+export const HUD_ROWS = 3;
+export const PLAY_ROWS = GRID_ROWS - HUD_ROWS; // 19
+export const PLAY_Y_OFFSET = HUD_ROWS; // play area starts at row 3
+export const CANVAS_WIDTH = GRID_COLS * CELL_SIZE; // 390
+export const GRID_HEIGHT = GRID_ROWS * CELL_SIZE; // 660
+
+// D-pad area below grid
+export const DPAD_AREA_Y = GRID_HEIGHT;
+export const DPAD_AREA_HEIGHT = 150;
+export const CANVAS_HEIGHT = DPAD_AREA_Y + DPAD_AREA_HEIGHT; // 810
+export const DPAD_BTN_SIZE = 70;
 
 // Timing
 export const SNAKE_TICK_MS = 400;
@@ -17,7 +23,7 @@ export const MERGE_DELAY_MS = MERGE_GLOW_MS + MERGE_SHRINK_MS; // 300 total per 
 // Gameplay
 export const DECAY_DISTANCE = 16;
 export const INITIAL_LIVES = 1;
-export const FOOD_COUNT_MAX = 30;
+export const FOOD_COUNT_MAX = 15;
 export const FOOD_INITIAL_COUNT = 3;
 export const FOOD_SPAWN_INTERVAL_MS = 2000; // time between each food spawn
 

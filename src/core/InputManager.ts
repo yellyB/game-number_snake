@@ -1,4 +1,5 @@
 import { Direction } from '../types';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, DPAD_AREA_Y, DPAD_BTN_SIZE } from '../constants';
 
 export interface JoystickState {
   active: boolean;
@@ -8,12 +9,26 @@ export interface JoystickState {
   thumbY: number;
 }
 
+// D-pad button rects in canvas coordinates
+const cx = CANVAS_WIDTH / 2;
+const cy = DPAD_AREA_Y + (CANVAS_HEIGHT - DPAD_AREA_Y) / 2;
+const s = DPAD_BTN_SIZE;
+
+export const DPAD_RECTS = {
+  [Direction.Up]:    { x: cx - s / 2, y: cy - s - 5, w: s, h: s },
+  [Direction.Down]:  { x: cx - s / 2, y: cy + 5,     w: s, h: s },
+  [Direction.Left]:  { x: cx - s / 2 - s - 15, y: cy - s / 2, w: s, h: s },
+  [Direction.Right]: { x: cx + s / 2 + 15,     y: cy - s / 2, w: s, h: s },
+};
+
 export class InputManager {
+  private canvas: HTMLCanvasElement;
   private bufferedDir: Direction | null = null;
   private currentDir: Direction = Direction.Right;
   private touchStartX = 0;
   private touchStartY = 0;
   private readonly SWIPE_THRESHOLD = 20;
+  private isDpadTouch = false;
 
   readonly joystick: JoystickState = {
     active: false,
@@ -23,11 +38,32 @@ export class InputManager {
     thumbY: 0,
   };
 
+  activeDpadDir: Direction | null = null;
+
   constructor(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
     window.addEventListener('keydown', (e) => this.onKeyDown(e));
     canvas.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
     canvas.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
     canvas.addEventListener('touchend', (e) => this.onTouchEnd(e), { passive: false });
+  }
+
+  private screenToCanvas(clientX: number, clientY: number): { x: number; y: number } {
+    const rect = this.canvas.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left) * (CANVAS_WIDTH / rect.width),
+      y: (clientY - rect.top) * (CANVAS_HEIGHT / rect.height),
+    };
+  }
+
+  private hitDpad(canvasX: number, canvasY: number): Direction | null {
+    for (const [dirStr, r] of Object.entries(DPAD_RECTS)) {
+      const dir = Number(dirStr) as Direction;
+      if (canvasX >= r.x && canvasX <= r.x + r.w && canvasY >= r.y && canvasY <= r.y + r.h) {
+        return dir;
+      }
+    }
+    return null;
   }
 
   private onKeyDown(e: KeyboardEvent) {
@@ -47,6 +83,19 @@ export class InputManager {
   private onTouchStart(e: TouchEvent) {
     e.preventDefault();
     const t = e.touches[0];
+    const canvasPos = this.screenToCanvas(t.clientX, t.clientY);
+
+    // Check D-pad first
+    const dpadDir = this.hitDpad(canvasPos.x, canvasPos.y);
+    if (dpadDir !== null) {
+      this.isDpadTouch = true;
+      this.activeDpadDir = dpadDir;
+      this.tryBuffer(dpadDir);
+      return;
+    }
+
+    // Otherwise, activate joystick
+    this.isDpadTouch = false;
     this.touchStartX = t.clientX;
     this.touchStartY = t.clientY;
     this.joystick.active = true;
@@ -59,6 +108,21 @@ export class InputManager {
   private onTouchMove(e: TouchEvent) {
     e.preventDefault();
     const t = e.touches[0];
+
+    if (this.isDpadTouch) {
+      // Update D-pad selection as finger moves
+      const canvasPos = this.screenToCanvas(t.clientX, t.clientY);
+      const dpadDir = this.hitDpad(canvasPos.x, canvasPos.y);
+      if (dpadDir !== null && dpadDir !== this.activeDpadDir) {
+        this.activeDpadDir = dpadDir;
+        this.tryBuffer(dpadDir);
+      } else if (dpadDir === null) {
+        this.activeDpadDir = null;
+      }
+      return;
+    }
+
+    // Joystick handling
     this.joystick.thumbX = t.clientX;
     this.joystick.thumbY = t.clientY;
 
@@ -75,6 +139,11 @@ export class InputManager {
 
   private onTouchEnd(e: TouchEvent) {
     e.preventDefault();
+    if (this.isDpadTouch) {
+      this.activeDpadDir = null;
+      this.isDpadTouch = false;
+      return;
+    }
     this.joystick.active = false;
   }
 

@@ -8,6 +8,7 @@ import { DecaySystem } from '../systems/DecaySystem';
 import { InputManager } from './InputManager';
 import { GameLoop } from './GameLoop';
 import { Renderer } from '../rendering/Renderer';
+import { SoundManager } from './SoundManager';
 import {
   CANVAS_WIDTH, CANVAS_HEIGHT, SNAKE_TICK_MS,
   CELL_SIZE, MAX_FOOD_VALUE,
@@ -29,6 +30,7 @@ export class Game {
   private input: InputManager;
   private loop: GameLoop;
   private renderer = new Renderer();
+  private sound = new SoundManager();
 
   private state: GameState = 'ready';
   score = 0;
@@ -138,12 +140,16 @@ export class Game {
     if (result.self) {
       this.state = 'game_over';
       this.snake.alive = false;
+      this.sound.death();
+      navigator.vibrate?.(200);
       return;
     }
 
     if (result.food && result.foodDangerous) {
       this.state = 'game_over';
       this.snake.alive = false;
+      this.sound.death();
+      navigator.vibrate?.(200);
       return;
     }
 
@@ -156,6 +162,7 @@ export class Game {
         if (this.snake.segments.length > 1) {
           this.snake.segments.pop();
         }
+        this.sound.eat();
       } else if (eaten.type === 'merge') {
         this.snake.move();
         this.wrapHead();
@@ -165,6 +172,7 @@ export class Game {
       } else {
         this.snake.eat(eaten.value);
         this.wrapHead();
+        this.sound.eat();
       }
 
     } else {
@@ -202,6 +210,8 @@ export class Game {
           );
         }
 
+        this.sound.merge();
+        navigator.vibrate?.(50);
         this.score += this.mergeSystem.consumeScore();
         if (this.advanceReady) {
           this.advanceRound();
@@ -222,10 +232,13 @@ export class Game {
           this.renderer.mergeAnimator.spawnBurst(
             seg.pos.x * CELL_SIZE, seg.pos.y * CELL_SIZE, seg.value,
           );
+          this.sound.pop();
           info.lastPopTime = now;
         }
         if (this.snake.segments.length <= 1) {
           this.score += info.bonus;
+          this.sound.roundClear();
+          navigator.vibrate?.(100);
           info.phase = 'showing';
           info.showStartTime = now;
         }
@@ -257,6 +270,7 @@ export class Game {
       clearBonus,
       this.showTutorial,
       this.input.joystick,
+      this.input.activeDpadDir,
     );
   }
 }
