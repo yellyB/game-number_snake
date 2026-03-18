@@ -1,5 +1,5 @@
 import { Direction } from '../types';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, DPAD_AREA_Y, DPAD_BTN_SIZE } from '../constants';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, GRID_WIDTH, DPAD_AREA_Y, DPAD_BTN_SIZE, CELL_SIZE, PLAY_Y_OFFSET, PLAY_ROWS } from '../constants';
 
 export interface JoystickState {
   active: boolean;
@@ -101,15 +101,20 @@ export class InputManager {
       return;
     }
 
-    // Otherwise, activate joystick
+    // Only activate joystick inside the play grid area
     this.isDpadTouch = false;
-    this.touchStartX = t.clientX;
-    this.touchStartY = t.clientY;
-    this.joystick.active = true;
-    this.joystick.centerX = t.clientX;
-    this.joystick.centerY = t.clientY;
-    this.joystick.thumbX = t.clientX;
-    this.joystick.thumbY = t.clientY;
+    const gridTop = PLAY_Y_OFFSET * CELL_SIZE;
+    const gridBottom = gridTop + PLAY_ROWS * CELL_SIZE;
+    if (canvasPos.x >= 0 && canvasPos.x <= GRID_WIDTH &&
+        canvasPos.y >= gridTop && canvasPos.y <= gridBottom) {
+      this.touchStartX = t.clientX;
+      this.touchStartY = t.clientY;
+      this.joystick.active = true;
+      this.joystick.centerX = t.clientX;
+      this.joystick.centerY = t.clientY;
+      this.joystick.thumbX = t.clientX;
+      this.joystick.thumbY = t.clientY;
+    }
   }
 
   private onTouchMove(e: TouchEvent) {
