@@ -2,7 +2,7 @@ import { GameState } from '../types';
 import { Snake } from '../entities/Snake';
 import { FoodManager } from '../entities/Food';
 import { FoodSpawner } from '../entities/FoodSpawner';
-import { CollisionSystem, wrapPos } from '../systems/CollisionSystem';
+import { CollisionSystem } from '../systems/CollisionSystem';
 import { MergeSystem } from '../systems/MergeSystem';
 import { DecaySystem } from '../systems/DecaySystem';
 import { InputManager } from './InputManager';
@@ -137,7 +137,7 @@ export class Game {
 
     const result = this.collision.check(this.snake, this.food);
 
-    if (result.self) {
+    if (result.self || result.wall) {
       this.state = 'game_over';
       this.snake.alive = false;
       this.sound.death();
@@ -158,26 +158,22 @@ export class Game {
 
       if (eaten.type === 'removal') {
         this.snake.move();
-        this.wrapHead();
         if (this.snake.segments.length > 1) {
           this.snake.segments.pop();
         }
         this.sound.eat();
       } else if (eaten.type === 'merge') {
         this.snake.move();
-        this.wrapHead();
         if (this.mergeSystem.startMergeScan(this.snake)) {
           this.state = 'merging';
         }
       } else {
         this.snake.eat(eaten.value);
-        this.wrapHead();
         this.sound.eat();
       }
 
     } else {
       this.snake.move();
-      this.wrapHead();
     }
 
     // Spawn food over time
@@ -186,13 +182,6 @@ export class Game {
       this.foodSpawner.spawnSingle(this.food, this.snake, this.maxFoodValue);
       this.lastFoodSpawnTime = now;
     }
-  }
-
-  private wrapHead() {
-    const h = this.snake.head;
-    const wrapped = wrapPos(h.pos);
-    h.pos.x = wrapped.x;
-    h.pos.y = wrapped.y;
   }
 
   private render(dt: number) {

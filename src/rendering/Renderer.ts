@@ -85,7 +85,13 @@ export class Renderer {
       }
     }
 
-    // Render in side panel, right of the play map
+    // Panel background (dark navy, same as D-pad area)
+    const panelX = GRID_WIDTH;
+    const panelW = CANVAS_WIDTH - GRID_WIDTH;
+    ctx.fillStyle = COLOR_HUD_BG;
+    ctx.fillRect(panelX, 0, panelW, GRID_HEIGHT);
+
+    // Render segment boxes in side panel
     const boxSize = 14;
     const rowH = 20;
     const playTop = PLAY_Y_OFFSET * CELL_SIZE;
@@ -170,7 +176,7 @@ export class Renderer {
     ctx.fillStyle = 'rgba(0,0,0,0.88)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    const cx = GRID_WIDTH / 2;
+    const cx = CANVAS_WIDTH / 2;
     const S = 20;
     const step = S + 2;
     const gap = 6;
@@ -481,12 +487,12 @@ export class Renderer {
     ctx.font = 'bold 28px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`ROUND ${round} CLEAR!`, GRID_WIDTH / 2, GRID_HEIGHT / 2 - 20);
+    ctx.fillText(`ROUND ${round} CLEAR!`, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 - 20);
 
     if (bonus > 0) {
       ctx.fillStyle = '#ffd700';
       ctx.font = 'bold 20px monospace';
-      ctx.fillText(`+${bonus} BONUS`, GRID_WIDTH / 2, GRID_HEIGHT / 2 + 20);
+      ctx.fillText(`+${bonus} BONUS`, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 + 20);
     }
   }
 
@@ -498,10 +504,10 @@ export class Renderer {
     ctx.font = 'bold 28px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(title, GRID_WIDTH / 2, GRID_HEIGHT / 2 - 20);
+    ctx.fillText(title, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 - 20);
 
     ctx.fillStyle = '#aaa';
     ctx.font = '14px monospace';
-    ctx.fillText(subtitle, GRID_WIDTH / 2, GRID_HEIGHT / 2 + 20);
+    ctx.fillText(subtitle, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 + 20);
   }
 }
