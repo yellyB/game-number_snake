@@ -27,18 +27,12 @@ export class FoodRenderer {
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
 
-        // ✕ icon
-        const d = radius * 0.5;
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2.5;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(cx - d, cy - d);
-        ctx.lineTo(cx + d, cy + d);
-        ctx.moveTo(cx + d, cy - d);
-        ctx.lineTo(cx - d, cy + d);
-        ctx.stroke();
-        ctx.lineCap = 'butt';
+        // ✂ icon
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('✂', cx, cy);
         continue;
       }
 
