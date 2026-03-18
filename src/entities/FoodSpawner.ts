@@ -40,6 +40,11 @@ export class FoodSpawner {
   }
 
   private pickFoodValue(snake: Snake, maxFoodValue: number): FoodPick {
+    // ~5% chance for merge item (1 in 20)
+    if (Math.random() < 0.05) {
+      return { value: 0, type: 'merge' };
+    }
+
     const headValue = snake.head.value;
     const tailValue = snake.tail.value;
     const segmentValues = new Set(snake.segments.map(s => s.value));
@@ -121,12 +126,8 @@ export class FoodSpawner {
   }
 
   private pickSpecial(lowOutliers: number[]): FoodPick {
-    // 1/3 merge, 1/3 removal, 1/3 low outlier (if available)
-    const roll = Math.random();
-    if (roll < 0.33) {
-      return { value: 0, type: 'merge' };
-    }
-    if (roll < 0.66 || lowOutliers.length === 0) {
+    // Half removal, half low outlier (if available)
+    if (lowOutliers.length === 0 || Math.random() < 0.5) {
       return { value: 0, type: 'removal' };
     }
     const idx = Math.floor(Math.random() * lowOutliers.length);
