@@ -1,6 +1,6 @@
 import { Segment, Direction, DIR_VECTORS } from '../types';
 import { Vec2, vec2Add, vec2Eq } from '../utils/Vec2';
-import { GRID_COLS, PLAY_ROWS, PLAY_Y_OFFSET, INITIAL_HEAD_VALUE } from '../constants';
+import { GRID_COLS, PLAY_ROWS, PLAY_Y_OFFSET } from '../constants';
 
 export class Snake {
   segments: Segment[] = [];
@@ -12,13 +12,13 @@ export class Snake {
     this.reset();
   }
 
-  reset() {
+  reset(round = 1) {
     const startX = 5;
     const startY = PLAY_Y_OFFSET + Math.floor(PLAY_ROWS / 2);
+    const base = round; // round 1: head=2,tail=1 / round 2: head=3,tail=2
     this.segments = [
-      { pos: { x: startX, y: startY }, value: INITIAL_HEAD_VALUE },
-      { pos: { x: startX - 1, y: startY }, value: 2 },
-      { pos: { x: startX - 2, y: startY }, value: 1 },
+      { pos: { x: startX, y: startY }, value: base + 1 },
+      { pos: { x: startX - 1, y: startY }, value: base },
     ];
     this.direction = Direction.Right;
     this.alive = true;

@@ -31,7 +31,7 @@ export class MergeSystem {
       if (segs[i].value === segs[i - 1].value) {
         this.activeMerge = {
           index: i - 1,
-          resultValue: segs[i].value * 2,
+          resultValue: segs[i].value + 1,
           startTime: performance.now(),
           phase: 'glow',
         };
