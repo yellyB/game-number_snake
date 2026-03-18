@@ -102,21 +102,29 @@ export class Game {
     }
 
     if (result.food) {
-      // Eat food: move and grow
       const eaten = this.food.removeAt(result.food.pos)!;
-      this.snake.move(false); // move head forward
-      this.snake.addTailSegment(eaten.value); // add food value at tail
+
+      if (eaten.type === 'removal') {
+        // Removal block: move without growing, then pop tail
+        this.snake.move();
+        if (this.snake.segments.length > 1) {
+          this.snake.segments.pop();
+        }
+      } else {
+        // Normal food: move and grow
+        this.snake.eat(eaten.value);
+
+        // Start merge scan
+        if (this.mergeSystem.startMergeScan(this.snake)) {
+          this.state = 'merging';
+        }
+      }
 
       // Spawn replacement
       this.foodSpawner.spawnSingle(this.food, this.snake, config.maxFoodValue);
-
-      // Start merge scan
-      if (this.mergeSystem.startMergeScan(this.snake)) {
-        this.state = 'merging';
-      }
     } else {
       // Normal move
-      this.snake.move(false);
+      this.snake.move();
 
       // Check if snake exited through the right side (round clear)
       if (!this.roundSystem.fenceActive && this.snake.head.pos.x >= GRID_COLS) {

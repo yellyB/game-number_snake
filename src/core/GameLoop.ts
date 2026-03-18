@@ -28,7 +28,7 @@ export class GameLoop {
 
   private loop = (now: number) => {
     if (!this.running) return;
-    const delta = now - this.lastTime;
+    const delta = Math.min(now - this.lastTime, this.tickMs * 3);
     this.lastTime = now;
     this.accumulator += delta;
 

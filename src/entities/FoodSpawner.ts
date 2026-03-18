@@ -2,7 +2,7 @@ import { FoodItem } from '../types';
 import { Vec2 } from '../utils/Vec2';
 import { FoodManager } from './Food';
 import { Snake } from './Snake';
-import { GRID_COLS, PLAY_ROWS, PLAY_Y_OFFSET, FOOD_COUNT_TARGET } from '../constants';
+import { GRID_COLS, PLAY_ROWS, PLAY_Y_OFFSET, FOOD_COUNT_TARGET, REMOVAL_BLOCK_SPAWN_CHANCE } from '../constants';
 import { weightedRandom } from '../utils/random';
 
 export class FoodSpawner {
@@ -10,8 +10,12 @@ export class FoodSpawner {
     while (foodManager.items.length < FOOD_COUNT_TARGET) {
       const pos = this.findEmptyCell(foodManager, snake);
       if (!pos) break;
-      const value = this.randomValue(maxValue);
-      foodManager.add({ pos, value });
+      if (Math.random() < REMOVAL_BLOCK_SPAWN_CHANCE) {
+        foodManager.add({ pos, value: 0, type: 'removal' });
+      } else {
+        const value = this.randomValue(maxValue);
+        foodManager.add({ pos, value, type: 'normal' });
+      }
     }
   }
 
@@ -40,8 +44,13 @@ export class FoodSpawner {
   spawnSingle(foodManager: FoodManager, snake: Snake, maxValue: number): FoodItem | null {
     const pos = this.findEmptyCell(foodManager, snake);
     if (!pos) return null;
-    const value = this.randomValue(maxValue);
-    const item: FoodItem = { pos, value };
+    let item: FoodItem;
+    if (Math.random() < REMOVAL_BLOCK_SPAWN_CHANCE) {
+      item = { pos, value: 0, type: 'removal' };
+    } else {
+      const value = this.randomValue(maxValue);
+      item = { pos, value, type: 'normal' };
+    }
     foodManager.add(item);
     return item;
   }

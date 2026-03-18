@@ -1,6 +1,6 @@
 import { FoodManager } from '../entities/Food';
 import { Snake } from '../entities/Snake';
-import { CELL_SIZE, COLOR_FOOD_SAFE, COLOR_FOOD_DANGER, COLOR_FOOD_MERGEABLE } from '../constants';
+import { CELL_SIZE, COLOR_FOOD_SAFE, COLOR_FOOD_DANGER, COLOR_FOOD_MERGEABLE, COLOR_FOOD_REMOVAL } from '../constants';
 
 export class FoodRenderer {
   render(ctx: CanvasRenderingContext2D, foodManager: FoodManager, snake: Snake) {
@@ -10,6 +10,37 @@ export class FoodRenderer {
     for (const food of foodManager.items) {
       const x = food.pos.x * CELL_SIZE;
       const y = food.pos.y * CELL_SIZE;
+      const cx = x + CELL_SIZE / 2;
+      const cy = y + CELL_SIZE / 2;
+      const radius = CELL_SIZE * 0.35;
+
+      if (food.type === 'removal') {
+        // Removal block: purple with ✕
+        ctx.shadowColor = COLOR_FOOD_REMOVAL;
+        ctx.shadowBlur = 6 + Math.sin(performance.now() / 300) * 3;
+
+        ctx.fillStyle = COLOR_FOOD_REMOVAL;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+
+        // ✕ icon
+        const d = radius * 0.5;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cx - d, cy - d);
+        ctx.lineTo(cx + d, cy + d);
+        ctx.moveTo(cx + d, cy - d);
+        ctx.lineTo(cx - d, cy + d);
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+        continue;
+      }
 
       const isDangerous = food.value > headValue;
       const isMergeable = food.value === tailValue;
@@ -31,10 +62,6 @@ export class FoodRenderer {
       }
 
       // Draw circle
-      const cx = x + CELL_SIZE / 2;
-      const cy = y + CELL_SIZE / 2;
-      const radius = CELL_SIZE * 0.35;
-
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(cx, cy, radius, 0, Math.PI * 2);

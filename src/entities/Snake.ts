@@ -38,19 +38,23 @@ export class Snake {
     return vec2Add(this.head.pos, delta);
   }
 
-  move(grow: boolean, newValue?: number) {
-    const newHead: Segment = {
-      pos: this.nextHeadPos(),
-      value: this.head.value,
-    };
-    this.segments.unshift(newHead);
-    if (grow && newValue !== undefined) {
-      // The eaten food becomes a tail segment — keep current tail
-      this.segments.push({ pos: this.segments[this.segments.length - 2].pos, value: newValue });
+  /** Normal move: shift all positions forward, length unchanged */
+  move() {
+    for (let i = this.segments.length - 1; i > 0; i--) {
+      this.segments[i].pos = { ...this.segments[i - 1].pos };
     }
-    if (!grow) {
-      this.segments.pop();
+    this.segments[0].pos = this.nextHeadPos();
+    this.distanceSinceDecay++;
+  }
+
+  /** Eat food: shift positions, grow by adding food value at old tail position */
+  eat(foodValue: number) {
+    const oldTailPos = { ...this.segments[this.segments.length - 1].pos };
+    for (let i = this.segments.length - 1; i > 0; i--) {
+      this.segments[i].pos = { ...this.segments[i - 1].pos };
     }
+    this.segments[0].pos = this.nextHeadPos();
+    this.segments.push({ pos: oldTailPos, value: foodValue });
     this.distanceSinceDecay++;
   }
 
@@ -64,10 +68,5 @@ export class Snake {
 
   isInBounds(pos: Vec2): boolean {
     return pos.x >= 0 && pos.x < GRID_COLS && pos.y >= PLAY_Y_OFFSET && pos.y < PLAY_Y_OFFSET + PLAY_ROWS;
-  }
-
-  addTailSegment(value: number) {
-    const lastSeg = this.segments[this.segments.length - 1];
-    this.segments.push({ pos: { ...lastSeg.pos }, value });
   }
 }

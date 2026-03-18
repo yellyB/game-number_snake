@@ -24,6 +24,7 @@ export type GameState = 'playing' | 'merging' | 'round_clear' | 'game_over' | 'r
 export interface FoodItem {
   pos: Vec2;
   value: number;
+  type: 'normal' | 'removal';
 }
 
 export interface MergeEvent {

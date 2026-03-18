@@ -1,7 +1,7 @@
 import { Snake } from '../entities/Snake';
 import { FoodManager } from '../entities/Food';
 import { FoodItem } from '../types';
-import { Vec2 } from '../utils/Vec2';
+import { Vec2, vec2Eq } from '../utils/Vec2';
 
 export interface CollisionResult {
   wall: boolean;
@@ -26,17 +26,24 @@ export class CollisionSystem {
       return result;
     }
 
-    // Self collision (skip first segment, which is the current head position)
-    if (snake.occupies(nextPos, true)) {
-      result.self = true;
-      return result;
-    }
-
-    // Food collision
+    // Food collision (check before self-collision to know if tail will vacate)
     const food = foodManager.getAt(nextPos);
+
+    // Self collision (skip first segment, which is the current head position)
+    // On a normal move (no food), the tail will vacate its position, so exclude it
+    const tailPos = snake.tail.pos;
+    const willGrow = food !== undefined && food.type !== 'removal';
+    const isSelfHit = snake.occupies(nextPos, true);
+    if (isSelfHit) {
+      const hittingTailOnly = vec2Eq(nextPos, tailPos);
+      if (!hittingTailOnly || willGrow) {
+        result.self = true;
+        return result;
+      }
+    }
     if (food) {
       result.food = food;
-      result.foodDangerous = food.value > snake.head.value;
+      result.foodDangerous = food.type === 'removal' ? false : food.value > snake.head.value;
     }
 
     return result;

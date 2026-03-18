@@ -1,6 +1,6 @@
 import { Snake } from '../entities/Snake';
 import { RoundSystem } from '../systems/RoundSystem';
-import { CELL_SIZE, GRID_COLS, HUD_ROWS, COLOR_HUD_BG, COLOR_TEXT, DECAY_DISTANCE } from '../constants';
+import { CELL_SIZE, GRID_COLS, HUD_ROWS, COLOR_HUD_BG, COLOR_TEXT, DECAY_DISTANCE, INITIAL_LIVES } from '../constants';
 
 export class HudRenderer {
   render(ctx: CanvasRenderingContext2D, snake: Snake, roundSystem: RoundSystem, lives: number) {
@@ -40,7 +40,7 @@ export class HudRenderer {
     ctx.textAlign = 'center';
     ctx.fillStyle = COLOR_TEXT;
     ctx.font = 'bold 14px monospace';
-    const heartsStr = '♥'.repeat(lives) + '♡'.repeat(Math.max(0, 3 - lives));
+    const heartsStr = '♥'.repeat(lives) + '♡'.repeat(Math.max(0, INITIAL_LIVES - lives));
     ctx.fillText(heartsStr, width / 2, y - 8);
 
     // Head decay indicator
