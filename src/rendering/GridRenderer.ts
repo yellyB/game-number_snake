@@ -27,5 +27,10 @@ export class GridRenderer {
       ctx.lineTo(width, startY + y * CELL_SIZE);
       ctx.stroke();
     }
+
+    // Play area border
+    ctx.strokeStyle = '#1e4a78';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, startY, width, height);
   }
 }
