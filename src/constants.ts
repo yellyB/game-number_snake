@@ -5,7 +5,9 @@ export const GRID_ROWS = 23;
 export const HUD_ROWS = 3;
 export const PLAY_ROWS = GRID_ROWS - HUD_ROWS; // 20
 export const PLAY_Y_OFFSET = HUD_ROWS; // play area starts at row 3
-export const CANVAS_WIDTH = GRID_COLS * CELL_SIZE; // 392
+export const GRID_WIDTH = GRID_COLS * CELL_SIZE; // 392
+export const SIDE_PANEL_WIDTH = 44;
+export const CANVAS_WIDTH = GRID_WIDTH + SIDE_PANEL_WIDTH; // 436
 export const GRID_HEIGHT = GRID_ROWS * CELL_SIZE; // 644
 
 // D-pad area below grid

@@ -11,8 +11,8 @@ import { Direction, GameState } from '../types';
 import { JoystickState, DPAD_RECTS } from '../core/InputManager';
 import { getValueColor } from '../utils/colors';
 import {
-  CANVAS_WIDTH, CANVAS_HEIGHT, GRID_HEIGHT, COLOR_BG, COLOR_HUD_BG,
-  COLOR_SNAKE_HEAD, DPAD_BTN_SIZE, DPAD_AREA_HEIGHT,
+  CANVAS_WIDTH, CANVAS_HEIGHT, GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, COLOR_BG, COLOR_HUD_BG,
+  COLOR_SNAKE_HEAD, DPAD_BTN_SIZE, PLAY_Y_OFFSET, PLAY_ROWS,
 } from '../constants';
 
 export class Renderer {
@@ -50,11 +50,11 @@ export class Renderer {
     this.mergeAnimator.update(1 / 60);
     this.mergeAnimator.render(ctx);
 
+    // Segment info panel (right side, outside play map)
+    this.renderSegmentList(ctx, snake);
+
     // D-pad (always visible)
     this.renderDpad(ctx, activeDpadDir ?? null);
-
-    // Segment info on right side of D-pad area (outside play map)
-    this.renderSegmentList(ctx, snake);
 
     if (joystick?.active) {
       this.renderJoystick(ctx, joystick);
@@ -85,11 +85,13 @@ export class Renderer {
       }
     }
 
+    // Render in side panel, right of the play map
     const boxSize = 14;
     const rowH = 20;
-    const maxGroups = Math.min(groups.length, Math.floor(DPAD_AREA_HEIGHT / rowH));
-    const rightX = CANVAS_WIDTH - 6;
-    const startY = GRID_HEIGHT + 8;
+    const playTop = PLAY_Y_OFFSET * CELL_SIZE;
+    const maxGroups = Math.min(groups.length, Math.floor(PLAY_ROWS * CELL_SIZE / rowH));
+    const rightX = CANVAS_WIDTH - 4;
+    const startY = playTop + 6;
 
     for (let i = 0; i < maxGroups; i++) {
       const g = groups[i];
@@ -168,7 +170,7 @@ export class Renderer {
     ctx.fillStyle = 'rgba(0,0,0,0.88)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    const cx = CANVAS_WIDTH / 2;
+    const cx = GRID_WIDTH / 2;
     const S = 20;
     const step = S + 2;
     const gap = 6;
@@ -479,12 +481,12 @@ export class Renderer {
     ctx.font = 'bold 28px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`ROUND ${round} CLEAR!`, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 - 20);
+    ctx.fillText(`ROUND ${round} CLEAR!`, GRID_WIDTH / 2, GRID_HEIGHT / 2 - 20);
 
     if (bonus > 0) {
       ctx.fillStyle = '#ffd700';
       ctx.font = 'bold 20px monospace';
-      ctx.fillText(`+${bonus} BONUS`, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 + 20);
+      ctx.fillText(`+${bonus} BONUS`, GRID_WIDTH / 2, GRID_HEIGHT / 2 + 20);
     }
   }
 
@@ -496,10 +498,10 @@ export class Renderer {
     ctx.font = 'bold 28px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(title, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 - 20);
+    ctx.fillText(title, GRID_WIDTH / 2, GRID_HEIGHT / 2 - 20);
 
     ctx.fillStyle = '#aaa';
     ctx.font = '14px monospace';
-    ctx.fillText(subtitle, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 + 20);
+    ctx.fillText(subtitle, GRID_WIDTH / 2, GRID_HEIGHT / 2 + 20);
   }
 }
