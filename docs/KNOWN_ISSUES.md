@@ -23,9 +23,35 @@ for (const seg of this.snake.segments) {
 
 ---
 
-## 2. 제거 블럭 decay 이중 페널티
+## 2. Decay 시스템 비활성화 상태
 
-**상태:** 보류 (의도적)
+**상태:** 기능 구현 완료, 현재 OFF
+
+**현상:**
+일정 거리(16칸) 이동 시 꼬리 끝 세그먼트를 제거하는 decay 시스템이 구현되어 있지만, 난이도 조절을 위해 비활성화해둔 상태. 나중에 플레이 모드(하드 모드 등) 선택에 따라 활성화할 예정.
+
+**관련 파일:**
+- `src/systems/DecaySystem.ts` — decay 로직 (코드 유지)
+- `src/core/Game.ts` — `tick()` 내 decay 호출부 주석 처리됨
+
+**활성화 방법:**
+`src/core/Game.ts`에서 아래 주석을 해제하면 된다.
+
+```typescript
+// Tail decay (disabled — reserved for hard mode)
+// if (this.state === 'playing' && this.decaySystem.update(this.snake)) {
+//   this.loseLife();
+//   return;
+// }
+```
+
+**참고:** decay 활성화 시, 합체 중(`state === 'merging'`)에는 decay가 스킵되도록 이미 처리되어 있음.
+
+---
+
+## 3. 제거 블럭 decay 이중 페널티
+
+**상태:** 보류 (decay 활성화 시 검토 필요)
 
 **현상:**
 제거 블럭을 먹으면:
