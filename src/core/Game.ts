@@ -40,7 +40,6 @@ export class Game {
   private state: GameState = 'ready';
   score = 0;
   round = 1;
-  maxFoodValue = MAX_FOOD_VALUE;
   private lastFoodSpawnTime = 0;
   private roundClearInfo: {
     lastPopTime: number;
@@ -116,6 +115,10 @@ export class Game {
     return Math.max(MIN_TICK_MS, SNAKE_TICK_MS - (this.round - 1) * ROUND_SPEED_DECREASE);
   }
 
+  get maxFoodValue(): number {
+    return Math.max(MAX_FOOD_VALUE, Math.floor(Math.sqrt(this.snake.head.value)));
+  }
+
   private handleAction() {
     if (this.state === 'ready') {
       this.state = 'playing';
@@ -134,7 +137,6 @@ export class Game {
     this.snake.reset();
     this.food.clear();
     this.round = 1;
-    this.maxFoodValue = MAX_FOOD_VALUE;
     this.foodSpawner.spawn(this.food, this.snake, this.maxFoodValue);
     this.score = 0;
     this.lastFoodSpawnTime = performance.now();
@@ -255,7 +257,6 @@ export class Game {
       } else if (info.phase === 'showing') {
         if (now - info.showStartTime > 1500) {
           this.round++;
-          this.maxFoodValue++;
           this.loop.setTickMs(this.tickMs);
           this.food.clear();
           this.foodSpawner.spawn(this.food, this.snake, this.maxFoodValue);
