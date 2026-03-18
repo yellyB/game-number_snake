@@ -61,7 +61,7 @@ export class Renderer {
     }
 
     if (state === 'game_over') {
-      this.renderOverlay(ctx, 'GAME OVER', `Score: ${score} — Tap to restart`, '#e94560');
+      this.renderGameOver(ctx, score);
     } else if (state === 'round_clear') {
       this.renderRoundClear(ctx, round, roundClearBonus);
     } else if (state === 'ready' && showTutorial) {
@@ -494,6 +494,28 @@ export class Renderer {
       ctx.font = 'bold 20px monospace';
       ctx.fillText(`+${bonus} BONUS`, CANVAS_WIDTH / 2, GRID_HEIGHT / 2 + 20);
     }
+  }
+
+  private renderGameOver(ctx: CanvasRenderingContext2D, score: number) {
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, GRID_HEIGHT);
+
+    const cx = CANVAS_WIDTH / 2;
+    const cy = GRID_HEIGHT / 2;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.fillStyle = '#e94560';
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText('GAME OVER', cx, cy - 40);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 24px monospace';
+    ctx.fillText(`${score}`, cx, cy + 5);
+
+    ctx.fillStyle = '#aaa';
+    ctx.font = '12px monospace';
+    ctx.fillText('Tap to restart', cx, cy + 40);
   }
 
   private renderOverlay(ctx: CanvasRenderingContext2D, title: string, subtitle: string, color: string) {
