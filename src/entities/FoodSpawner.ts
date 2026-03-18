@@ -10,55 +10,68 @@ import { weightedRandom } from '../utils/random';
 
 interface FoodPick {
   value: number;
-  type: 'normal' | 'removal';
+  type: 'normal' | 'removal' | 'merge';
 }
 
 export class FoodSpawner {
-  spawn(foodManager: FoodManager, snake: Snake): void {
+  spawn(foodManager: FoodManager, snake: Snake, maxFoodValue: number): void {
     while (foodManager.items.length < FOOD_COUNT_TARGET) {
       const pos = this.findEmptyCell(foodManager, snake);
       if (!pos) break;
-      const pick = this.pickFoodValue(snake);
+      const pick = this.pickFoodValue(snake, maxFoodValue);
       foodManager.add({ pos, value: pick.value, type: pick.type });
     }
   }
 
-  spawnSingle(foodManager: FoodManager, snake: Snake): FoodItem | null {
+  spawnSingle(foodManager: FoodManager, snake: Snake, maxFoodValue: number): FoodItem | null {
     const pos = this.findEmptyCell(foodManager, snake);
     if (!pos) return null;
-    const pick = this.pickFoodValue(snake);
+    const pick = this.pickFoodValue(snake, maxFoodValue);
     const item: FoodItem = { pos, value: pick.value, type: pick.type };
     foodManager.add(item);
     return item;
   }
 
-  private pickFoodValue(snake: Snake): FoodPick {
+  spawnMerge(foodManager: FoodManager, snake: Snake): void {
+    const pos = this.findEmptyCell(foodManager, snake);
+    if (pos) {
+      foodManager.add({ pos, value: 0, type: 'merge' });
+    }
+  }
+
+  private pickFoodValue(snake: Snake, maxFoodValue: number): FoodPick {
     const headValue = snake.head.value;
     const tailValue = snake.tail.value;
     const segmentValues = new Set(snake.segments.map(s => s.value));
+    const cap = maxFoodValue;
 
-    // Build category pools
-    const meaningful = [...segmentValues].filter(v => v <= headValue);
+    // Build category pools (all values capped at MAX_FOOD_VALUE)
+    const meaningful = [...segmentValues].filter(v => v <= headValue && v <= cap);
     const edible: number[] = [];
-    for (let v = 1; v <= headValue; v++) {
+    for (let v = 1; v <= Math.min(headValue, cap); v++) {
       if (!segmentValues.has(v)) edible.push(v);
     }
     const dangerous: number[] = [];
-    for (let v = headValue + 1; v <= headValue + 3; v++) {
+    for (let v = headValue + 1; v <= Math.min(headValue + 3, cap); v++) {
       dangerous.push(v);
     }
     const minSegment = Math.min(...segmentValues);
     const lowOutliers: number[] = [];
-    for (let v = 1; v < minSegment; v++) {
+    for (let v = 1; v < Math.min(minSegment, cap + 1); v++) {
       lowOutliers.push(v);
     }
 
-    // Adjust category chances: if edible is empty, merge into meaningful
+    // Redistribute empty category chances into meaningful
     let chanceMeaningful = FOOD_CHANCE_MEANINGFUL;
     let chanceEdible = FOOD_CHANCE_EDIBLE;
+    let chanceDangerous = FOOD_CHANCE_DANGEROUS;
     if (edible.length === 0) {
       chanceMeaningful += chanceEdible;
       chanceEdible = 0;
+    }
+    if (dangerous.length === 0) {
+      chanceMeaningful += chanceDangerous;
+      chanceDangerous = 0;
     }
 
     // Roll category
@@ -79,8 +92,8 @@ export class FoodSpawner {
     }
 
     // Dangerous (10%)
-    cumulative += FOOD_CHANCE_DANGEROUS;
-    if (roll < cumulative) {
+    cumulative += chanceDangerous;
+    if (roll < cumulative && dangerous.length > 0) {
       return { value: this.pickDangerous(dangerous), type: 'normal' };
     }
 
@@ -108,8 +121,12 @@ export class FoodSpawner {
   }
 
   private pickSpecial(lowOutliers: number[]): FoodPick {
-    // Half removal, half low outliers. If no low outliers, all removal.
-    if (lowOutliers.length === 0 || Math.random() < 0.5) {
+    // 1/3 merge, 1/3 removal, 1/3 low outlier (if available)
+    const roll = Math.random();
+    if (roll < 0.33) {
+      return { value: 0, type: 'merge' };
+    }
+    if (roll < 0.66 || lowOutliers.length === 0) {
       return { value: 0, type: 'removal' };
     }
     const idx = Math.floor(Math.random() * lowOutliers.length);

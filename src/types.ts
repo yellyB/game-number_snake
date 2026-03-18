@@ -19,12 +19,12 @@ export const DIR_VECTORS: Record<Direction, Vec2> = {
   [Direction.Left]: { x: -1, y: 0 },
 };
 
-export type GameState = 'playing' | 'merging' | 'round_clear' | 'game_over' | 'round_start';
+export type GameState = 'ready' | 'playing' | 'merging' | 'game_over';
 
 export interface FoodItem {
   pos: Vec2;
   value: number;
-  type: 'normal' | 'removal';
+  type: 'normal' | 'removal' | 'merge';
 }
 
 export interface MergeEvent {
@@ -34,8 +34,3 @@ export interface MergeEvent {
   phase: 'glow' | 'shrink' | 'done';
 }
 
-export interface RoundConfig {
-  round: number;
-  targetScore: number;
-  tickMs: number;
-}

@@ -16,17 +16,18 @@ export const MERGE_DELAY_MS = MERGE_GLOW_MS + MERGE_SHRINK_MS; // 300 total per 
 
 // Gameplay
 export const DECAY_DISTANCE = 16;
-export const INITIAL_LIVES = 5;
-export const INITIAL_HEAD_VALUE = 6;
+export const INITIAL_LIVES = 1;
 export const FOOD_COUNT_TARGET = 8;
 
 // Scoring
 export const MERGE_BASE_SCORE = 10;
 export const CHAIN_MULTIPLIER = 2; // each chain step multiplies score
 
-// Round
+// Round progression
 export const ROUND_1_TARGET_SCORE = 300;
 export const ROUND_SCORE_MULTIPLIER = 1.8;
+export const ROUND_SPEED_DECREASE = 30; // ms faster per round
+export const MIN_TICK_MS = 150;
 
 // Colors
 export const COLOR_BG = '#1a1a2e';
@@ -37,17 +38,19 @@ export const COLOR_SNAKE_BODY = '#533483';
 export const COLOR_FOOD_SAFE = '#4ecca3';
 export const COLOR_FOOD_DANGER = '#e23e57';
 export const COLOR_FOOD_MERGEABLE = '#ffd369';
-export const COLOR_FENCE_ACTIVE = '#00d2ff';
-export const COLOR_FENCE_INACTIVE = '#333';
+export const COLOR_WALL = '#00d2ff';
 export const COLOR_HUD_BG = '#0f0f23';
 export const COLOR_TEXT = '#eee';
 export const COLOR_MERGE_GLOW = '#ffd700';
 
-// Food spawn weights (must sum to 1.0)
+// Food spawn
+export const MAX_FOOD_VALUE = 3; // only 1~3 spawn; higher values come from merging
+// Category weights (must sum to 1.0)
 export const FOOD_CHANCE_MEANINGFUL = 0.60;
 export const FOOD_CHANCE_EDIBLE = 0.25;
 export const FOOD_CHANCE_DANGEROUS = 0.10;
 export const FOOD_CHANCE_SPECIAL = 0.05;
 
-// Removal block
+// Special items
 export const COLOR_FOOD_REMOVAL = '#b388ff';
+export const COLOR_FOOD_MERGE = '#ffd700';

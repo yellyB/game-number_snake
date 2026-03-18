@@ -1,6 +1,6 @@
 import { FoodManager } from '../entities/Food';
 import { Snake } from '../entities/Snake';
-import { CELL_SIZE, COLOR_FOOD_SAFE, COLOR_FOOD_DANGER, COLOR_FOOD_MERGEABLE, COLOR_FOOD_REMOVAL } from '../constants';
+import { CELL_SIZE, COLOR_FOOD_SAFE, COLOR_FOOD_DANGER, COLOR_FOOD_MERGEABLE, COLOR_FOOD_REMOVAL, COLOR_FOOD_MERGE } from '../constants';
 
 export class FoodRenderer {
   render(ctx: CanvasRenderingContext2D, foodManager: FoodManager, snake: Snake) {
@@ -39,6 +39,34 @@ export class FoodRenderer {
         ctx.lineTo(cx - d, cy + d);
         ctx.stroke();
         ctx.lineCap = 'butt';
+        continue;
+      }
+
+      if (food.type === 'merge') {
+        // Merge trigger: gold star with pulsing glow
+        const pulse = Math.sin(performance.now() / 250);
+        ctx.shadowColor = COLOR_FOOD_MERGE;
+        ctx.shadowBlur = 10 + pulse * 6;
+
+        ctx.fillStyle = COLOR_FOOD_MERGE;
+        // Draw diamond shape
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - radius);
+        ctx.lineTo(cx + radius, cy);
+        ctx.lineTo(cx, cy + radius);
+        ctx.lineTo(cx - radius, cy);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+
+        // "M" label
+        ctx.fillStyle = '#1a1a2e';
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('M', cx, cy);
         continue;
       }
 
