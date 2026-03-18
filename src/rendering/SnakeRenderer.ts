@@ -1,6 +1,6 @@
 import { Snake } from '../entities/Snake';
 import { MergeSystem } from '../systems/MergeSystem';
-import { CELL_SIZE, COLOR_SNAKE_HEAD, COLOR_MERGE_GLOW, GRID_COLS, PLAY_ROWS, PLAY_Y_OFFSET } from '../constants';
+import { CELL_SIZE, COLOR_SNAKE_HEAD, COLOR_MERGE_GLOW, GRID_COLS } from '../constants';
 
 const VALUE_COLORS: Record<number, string> = {
   1: '#6c5ce7',
@@ -58,13 +58,10 @@ export class SnakeRenderer {
     const y = gy * CELL_SIZE;
     const offsets: [number, number][] = [[x, y]];
     const totalW = GRID_COLS * CELL_SIZE;
-    const totalH = PLAY_ROWS * CELL_SIZE;
 
-    // Ghost copies at wrap edges
+    // Ghost copies at wrap edges (horizontal only — vertical ghosts would appear in HUD)
     if (gx === 0) offsets.push([x + totalW, y]);
     if (gx === GRID_COLS - 1) offsets.push([x - totalW, y]);
-    if (gy === PLAY_Y_OFFSET) offsets.push([x, y + totalH]);
-    if (gy === PLAY_Y_OFFSET + PLAY_ROWS - 1) offsets.push([x, y - totalH]);
 
     return offsets;
   }
