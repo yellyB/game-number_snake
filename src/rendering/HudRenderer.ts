@@ -86,10 +86,16 @@ export class HudRenderer {
     }
 
     if (!roundSystem.fenceActive) {
+      const pulse = Math.sin(performance.now() / 300);
+      const alpha = 0.7 + pulse * 0.3;
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#4ecca3';
-      ctx.font = 'bold 12px monospace';
-      ctx.fillText('EXIT OPEN →', width / 2, y + 32);
+      ctx.shadowColor = '#4ecca3';
+      ctx.shadowBlur = 8 + pulse * 4;
+      ctx.fillStyle = `rgba(78, 204, 163, ${alpha})`;
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText('▶ EXIT OPEN ▶', width / 2, y + 32);
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
     }
   }
 }

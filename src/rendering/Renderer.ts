@@ -9,7 +9,7 @@ import { FoodManager } from '../entities/Food';
 import { MergeSystem } from '../systems/MergeSystem';
 import { RoundSystem } from '../systems/RoundSystem';
 import { GameState } from '../types';
-import { CANVAS_WIDTH, CANVAS_HEIGHT, COLOR_BG } from '../constants';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, CELL_SIZE, PLAY_Y_OFFSET, PLAY_ROWS, COLOR_BG } from '../constants';
 
 export class Renderer {
   private grid = new GridRenderer();
@@ -40,7 +40,7 @@ export class Renderer {
     this.grid.render(ctx);
 
     // Fence
-    this.fenceRenderer.render(ctx, roundSystem.fenceActive);
+    this.fenceRenderer.render(ctx, roundSystem.fenceActive, roundSystem.fenceOpenedAt);
 
     // Food
     this.foodRenderer.render(ctx, food, snake);
@@ -51,6 +51,30 @@ export class Renderer {
     // Merge particles
     this.mergeAnimator.update(1 / 60);
     this.mergeAnimator.render(ctx);
+
+    // "EXIT OPEN" banner (fades out over 2s)
+    if (roundSystem.fenceOpenedAt > 0) {
+      const elapsed = performance.now() - roundSystem.fenceOpenedAt;
+      const duration = 2000;
+      if (elapsed < duration) {
+        const alpha = 1 - elapsed / duration;
+        const cy = PLAY_Y_OFFSET * CELL_SIZE + (PLAY_ROWS * CELL_SIZE) / 2;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(CANVAS_WIDTH / 2 - 140, cy - 28, 280, 56);
+        ctx.fillStyle = '#4ecca3';
+        ctx.font = 'bold 30px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = '#4ecca3';
+        ctx.shadowBlur = 16;
+        ctx.fillText('EXIT OPEN ▶', CANVAS_WIDTH / 2, cy);
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+    }
 
     // Overlay screens
     if (state === 'game_over') {
