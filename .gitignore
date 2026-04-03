@@ -1,2 +1,19 @@
 node_modules/
 dist/
+
+# TWA build artifacts
+*.apk
+*.apk.idsig
+*.aab
+*.keystore
+app/
+build/
+gradle/
+.gradle/
+gradlew
+gradlew.bat
+build.gradle
+settings.gradle
+gradle.properties
+manifest-checksum.txt
+store_icon.png

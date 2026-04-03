@@ -1,0 +1,47 @@
+{
+  "packageId": "io.github.yellyb.numsnake",
+  "host": "yellyB.github.io",
+  "name": "Number Snake",
+  "launcherName": "NumSnake",
+  "display": "fullscreen",
+  "themeColor": "#1A1A2E",
+  "themeColorDark": "#1A1A2E",
+  "navigationColor": "#1A1A2E",
+  "navigationColorDark": "#1A1A2E",
+  "navigationDividerColor": "#1A1A2E",
+  "navigationDividerColorDark": "#1A1A2E",
+  "backgroundColor": "#1A1A2E",
+  "enableNotifications": false,
+  "startUrl": "/game-number_snake/",
+  "iconUrl": "https://yellyB.github.io/game-number_snake/icon-512.png",
+  "maskableIconUrl": "https://yellyB.github.io/game-number_snake/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "numsnake"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://yellyb.github.io/game-number_snake/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "minSdkVersion": 21,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "value": "23:BF:29:F4:10:45:B4:A0:9A:6D:85:B9:75:3B:D8:F0:F6:F0:E0:9E:55:8B:B1:EE:B9:DE:6F:45:9A:50:28:28"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}
