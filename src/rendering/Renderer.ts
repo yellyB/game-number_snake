@@ -12,7 +12,8 @@ import { JoystickState, DPAD_RECTS } from '../core/InputManager';
 import { getValueColor } from '../utils/colors';
 import {
   CANVAS_WIDTH, CANVAS_HEIGHT, GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, COLOR_BG, COLOR_HUD_BG,
-  COLOR_SNAKE_HEAD, PLAY_Y_OFFSET, PLAY_ROWS,
+  COLOR_SNAKE_HEAD, COLOR_SNAKE_BODY, COLOR_FOOD_SAFE, COLOR_FOOD_REMOVAL, COLOR_FOOD_MERGE,
+  COLOR_MERGE_GLOW, COLOR_WALL, PLAY_Y_OFFSET, PLAY_ROWS,
 } from '../constants';
 
 export class Renderer {
@@ -38,11 +39,14 @@ export class Renderer {
     showTutorial = false,
     joystick?: JoystickState,
     activeDpadDir?: Direction | null,
+    highScore = 0,
+    chainCombo?: { count: number; startTime: number } | null,
+    muted = false,
   ) {
     ctx.fillStyle = COLOR_BG;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    this.hudRenderer.render(ctx, snake, score, round, targetScore);
+    this.hudRenderer.render(ctx, snake, score, round, targetScore, highScore, muted);
     this.grid.render(ctx);
     this.wallRenderer.render(ctx);
     this.foodRenderer.render(ctx, food, snake);
@@ -61,8 +65,12 @@ export class Renderer {
       this.renderJoystick(ctx, joystick);
     }
 
+    if (chainCombo) {
+      this.renderChainCombo(ctx, chainCombo);
+    }
+
     if (state === 'game_over') {
-      this.renderGameOver(ctx, score);
+      this.renderGameOver(ctx, score, highScore);
     } else {
       this.restartButtonRect = null;
     }
@@ -481,6 +489,59 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
+  // ── Chain combo ──
+
+  private renderChainCombo(ctx: CanvasRenderingContext2D, combo: { count: number; startTime: number }) {
+    const elapsed = performance.now() - combo.startTime;
+    const popDuration = 200;   // scale 1.3→1.0
+    const holdEnd = 1700;      // visible until 1.7s
+    const fadeEnd = 2200;      // fade out by 2.2s
+
+    let scale = 1;
+    let alpha = 1;
+
+    if (elapsed < popDuration) {
+      // Pop in: 1.3 → 1.0
+      const t = elapsed / popDuration;
+      scale = 1.3 - 0.3 * t;
+    } else if (elapsed < holdEnd) {
+      // Hold steady
+      scale = 1;
+      alpha = 1;
+    } else if (elapsed < fadeEnd) {
+      // Fade out
+      const t = (elapsed - holdEnd) / (fadeEnd - holdEnd);
+      alpha = 1 - t;
+    } else {
+      return;
+    }
+
+    const cx = GRID_WIDTH / 2;
+    const cy = PLAY_Y_OFFSET * CELL_SIZE + (PLAY_ROWS * CELL_SIZE) / 2;
+    const text = `CHAIN x${combo.count}!`;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+    ctx.globalAlpha = alpha;
+
+    // Shadow/glow
+    ctx.shadowColor = COLOR_MERGE_GLOW;
+    ctx.shadowBlur = 20;
+
+    ctx.fillStyle = COLOR_MERGE_GLOW;
+    ctx.font = 'bold 28px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, 0, 0);
+
+    // Second pass for brighter center
+    ctx.shadowBlur = 0;
+    ctx.fillText(text, 0, 0);
+
+    ctx.restore();
+  }
+
   // ── Overlays ──
 
   private renderRoundClear(ctx: CanvasRenderingContext2D, round: number, bonus: number, headBonus: number) {
@@ -510,25 +571,37 @@ export class Renderer {
   /** Rect of the restart button in canvas coords (set each frame during game_over) */
   restartButtonRect: { x: number; y: number; w: number; h: number } | null = null;
 
-  private renderGameOver(ctx: CanvasRenderingContext2D, score: number) {
+  private renderGameOver(ctx: CanvasRenderingContext2D, score: number, highScore: number) {
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, GRID_HEIGHT);
 
     const cx = CANVAS_WIDTH / 2;
     const cy = GRID_HEIGHT / 2;
+    const isNewBest = score >= highScore && score > 0;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.fillStyle = '#e94560';
+    ctx.fillStyle = COLOR_SNAKE_HEAD;
     ctx.font = 'bold 28px monospace';
-    ctx.fillText('GAME OVER', cx, cy - 40);
+    ctx.fillText('GAME OVER', cx, cy - 55);
 
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 24px monospace';
-    ctx.fillText(`${score}`, cx, cy + 5);
+    ctx.fillText(`${score}`, cx, cy - 15);
 
-    // Restart button below score
-    const btnY = cy + 30;
+    if (isNewBest) {
+      const pulse = Math.sin(performance.now() / 300) * 0.3 + 0.7;
+      ctx.fillStyle = `rgba(255,215,0,${pulse})`;
+      ctx.font = 'bold 14px monospace';
+      ctx.fillText('NEW BEST!', cx, cy + 10);
+    } else {
+      ctx.fillStyle = '#888';
+      ctx.font = '12px monospace';
+      ctx.fillText(`BEST: ${highScore}`, cx, cy + 10);
+    }
+
+    // Restart button
+    const btnY = cy + 35;
     const btnW = 160;
     const btnH = 32;
     const btnX = cx - btnW / 2;

@@ -4,10 +4,10 @@ import { FoodManager } from '../entities/Food';
 import { FoodSpawner } from '../entities/FoodSpawner';
 import { CollisionSystem, wrapPos } from '../systems/CollisionSystem';
 import { MergeSystem } from '../systems/MergeSystem';
-import { DecaySystem } from '../systems/DecaySystem';
 import { InputManager } from './InputManager';
 import { GameLoop } from './GameLoop';
 import { Renderer } from '../rendering/Renderer';
+import { HudRenderer } from '../rendering/HudRenderer';
 import { SoundManager } from './SoundManager';
 import {
   CANVAS_WIDTH, CANVAS_HEIGHT, SNAKE_TICK_MS,
@@ -35,8 +35,11 @@ export class Game {
   private state: GameState = 'ready';
   score = 0;
   round = 1;
+  private highScore = 0;
+  private highRound = 0;
   private lastFoodSpawnTime = 0;
   private showTutorial = true;
+  private chainCombo: { count: number; startTime: number } | null = null;
   private roundClearInfo: {
     lastPopTime: number;
     segmentScore: number;
@@ -57,9 +60,17 @@ export class Game {
     window.addEventListener('keydown', (e) => {
       if (e.key === ' ') {
         this.handleAction();
+      } else if (e.key === 'm' || e.key === 'M') {
+        this.sound.toggle();
       }
     });
     canvas.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      if (t && this.hitSoundIcon(t.clientX, t.clientY)) {
+        e.preventDefault();
+        this.sound.toggle();
+        return;
+      }
       if (this.state === 'ready') {
         this.handleAction();
       } else if (this.state === 'game_over') {
@@ -67,6 +78,10 @@ export class Game {
       }
     });
     canvas.addEventListener('mousedown', (e) => {
+      if (this.hitSoundIcon(e.clientX, e.clientY)) {
+        this.sound.toggle();
+        return;
+      }
       if (this.state === 'game_over') {
         this.handleGameOverClick(e);
       }
@@ -186,6 +201,14 @@ export class Game {
     // state is 'ready' from initGame, tutorial will show
   }
 
+  private hitSoundIcon(clientX: number, clientY: number): boolean {
+    const rect = this.ctx.canvas.getBoundingClientRect();
+    const canvasX = (clientX - rect.left) * (CANVAS_WIDTH / rect.width);
+    const canvasY = (clientY - rect.top) * (CANVAS_HEIGHT / rect.height);
+    const r = HudRenderer.SOUND_ICON_RECT;
+    return canvasX >= r.x && canvasX <= r.x + r.w && canvasY >= r.y && canvasY <= r.y + r.h;
+  }
+
   private hitRestartButton(canvasX: number, canvasY: number): boolean {
     const r = this.renderer.restartButtonRect;
     if (!r) return false;
@@ -222,6 +245,8 @@ export class Game {
     this.mergeSystem = new MergeSystem();
     this.loop.setTickMs(this.tickMs);
     this.state = 'ready';
+    this.highScore = parseInt(localStorage.getItem('numberSnake_highScore') ?? '0', 10) || 0;
+    this.highRound = parseInt(localStorage.getItem('numberSnake_highRound') ?? '0', 10) || 0;
   }
 
   private advanceRound() {
@@ -249,6 +274,7 @@ export class Game {
       this.snake.alive = false;
       this.sound.death();
       navigator.vibrate?.(200);
+      this.saveHighScore();
       return;
     }
 
@@ -257,6 +283,7 @@ export class Game {
       this.snake.alive = false;
       this.sound.death();
       navigator.vibrate?.(200);
+      this.saveHighScore();
       return;
     }
 
@@ -295,6 +322,17 @@ export class Game {
     }
   }
 
+  private saveHighScore() {
+    if (this.score > this.highScore) {
+      this.highScore = this.score;
+      localStorage.setItem('numberSnake_highScore', String(this.highScore));
+    }
+    if (this.round > this.highRound) {
+      this.highRound = this.round;
+      localStorage.setItem('numberSnake_highRound', String(this.highRound));
+    }
+  }
+
   private wrapHead() {
     const h = this.snake.head;
     const wrapped = wrapPos(h.pos);
@@ -320,6 +358,9 @@ export class Game {
         this.sound.merge();
         navigator.vibrate?.(50);
         this.score += this.mergeSystem.consumeScore();
+        if (this.mergeSystem.chainCount > 1) {
+          this.chainCombo = { count: this.mergeSystem.chainCount, startTime: now };
+        }
         if (this.advanceReady) {
           this.advanceRound();
         } else {
@@ -366,6 +407,11 @@ export class Game {
     const clearBonus = this.roundClearInfo?.phase === 'showing' ? this.roundClearInfo.bonus : 0;
     const clearHeadBonus = this.roundClearInfo?.phase === 'showing' ? this.roundClearInfo.headBonus : 0;
 
+    // Expire chain combo after total animation duration (2.2s)
+    if (this.chainCombo && now - this.chainCombo.startTime > 2200) {
+      this.chainCombo = null;
+    }
+
     this.renderer.render(
       this.ctx,
       this.snake,
@@ -381,6 +427,9 @@ export class Game {
       this.showTutorial,
       this.input.joystick,
       this.input.activeDpadDir,
+      this.highScore,
+      this.chainCombo,
+      this.sound.muted,
     );
   }
 }

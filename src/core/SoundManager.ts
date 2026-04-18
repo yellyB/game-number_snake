@@ -1,5 +1,21 @@
 export class SoundManager {
   private ctx: AudioContext | null = null;
+  private _muted = false;
+
+  constructor() {
+    this._muted = localStorage.getItem('numberSnake_muted') === '1';
+  }
+
+  get muted(): boolean { return this._muted; }
+  set muted(v: boolean) {
+    this._muted = v;
+    localStorage.setItem('numberSnake_muted', v ? '1' : '0');
+  }
+
+  toggle(): boolean {
+    this.muted = !this._muted;
+    return this._muted;
+  }
 
   private getCtx(): AudioContext {
     if (!this.ctx) {
@@ -10,6 +26,7 @@ export class SoundManager {
 
   /** Short pop — eating food */
   eat() {
+    if (this._muted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -26,6 +43,7 @@ export class SoundManager {
 
   /** Rising tone — merge */
   merge() {
+    if (this._muted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -42,6 +60,7 @@ export class SoundManager {
 
   /** Descending buzz — death */
   death() {
+    if (this._muted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -58,6 +77,7 @@ export class SoundManager {
 
   /** Short fanfare — round clear */
   roundClear() {
+    if (this._muted) return;
     const ctx = this.getCtx();
     const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
     notes.forEach((freq, i) => {
@@ -77,6 +97,7 @@ export class SoundManager {
 
   /** Quick pop — segment burst during round clear */
   pop() {
+    if (this._muted) return;
     const ctx = this.getCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();

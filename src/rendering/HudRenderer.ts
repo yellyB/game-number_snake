@@ -1,13 +1,17 @@
 import { Snake } from '../entities/Snake';
-import { CANVAS_WIDTH, CELL_SIZE, HUD_ROWS, COLOR_HUD_BG } from '../constants';
+import { CANVAS_WIDTH, CELL_SIZE, HUD_ROWS, COLOR_HUD_BG, COLOR_WALL, COLOR_FOOD_SAFE } from '../constants';
 
 export class HudRenderer {
+  static readonly SOUND_ICON_RECT = { x: 4, y: 4, w: 22, h: 22 };
+
   render(
     ctx: CanvasRenderingContext2D,
     _snake: Snake,
     score: number,
     round: number,
     targetScore: number,
+    highScore = 0,
+    muted = false,
   ) {
     const width = CANVAS_WIDTH;
     const height = HUD_ROWS * CELL_SIZE;
@@ -15,12 +19,22 @@ export class HudRenderer {
     ctx.fillStyle = COLOR_HUD_BG;
     ctx.fillRect(0, 0, width, height);
 
-    // Line 1: ROUND n (centered)
-    ctx.textAlign = 'center';
+    // Sound icon (top-left)
+    this.renderSoundIcon(ctx, muted);
+
+    // Line 1: ROUND n (left-center) + BEST: n (right)
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#00d2ff';
+    ctx.fillStyle = COLOR_WALL;
     ctx.font = 'bold 16px monospace';
+    ctx.textAlign = 'center';
     ctx.fillText(`ROUND ${round}`, width / 2, 18);
+
+    if (highScore > 0) {
+      ctx.fillStyle = '#666';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`BEST:${highScore}`, width - 6, 18);
+    }
 
     // Line 2: Score / Target (centered)
     ctx.fillStyle = '#fff';
@@ -64,5 +78,53 @@ export class HudRenderer {
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
     }
+  }
+
+  private renderSoundIcon(ctx: CanvasRenderingContext2D, muted: boolean) {
+    const cx = 15;
+    const cy = 15;
+
+    ctx.save();
+    ctx.globalAlpha = muted ? 0.4 : 1;
+
+    // Speaker body
+    const color = muted ? '#555' : '#aaa';
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+
+    // Speaker cone (trapezoid + rectangle)
+    ctx.beginPath();
+    ctx.moveTo(cx - 5, cy - 2);
+    ctx.lineTo(cx - 5, cy + 2);
+    ctx.lineTo(cx - 2, cy + 2);
+    ctx.lineTo(cx + 2, cy + 5);
+    ctx.lineTo(cx + 2, cy - 5);
+    ctx.lineTo(cx - 2, cy - 2);
+    ctx.closePath();
+    ctx.fill();
+
+    if (muted) {
+      // X mark
+      ctx.beginPath();
+      ctx.moveTo(cx + 5, cy - 3);
+      ctx.lineTo(cx + 10, cy + 3);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx + 10, cy - 3);
+      ctx.lineTo(cx + 5, cy + 3);
+      ctx.stroke();
+    } else {
+      // Sound waves (arcs)
+      ctx.beginPath();
+      ctx.arc(cx + 2, cy, 5, -Math.PI / 4, Math.PI / 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx + 2, cy, 9, -Math.PI / 4, Math.PI / 4);
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 }
