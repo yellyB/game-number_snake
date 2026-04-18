@@ -23,7 +23,6 @@ export const MERGE_SHRINK_MS = 150;
 export const MERGE_DELAY_MS = MERGE_GLOW_MS + MERGE_SHRINK_MS; // 300 total per step
 
 // Gameplay
-export const DECAY_DISTANCE = 16;
 export const INITIAL_LIVES = 1;
 export const FOOD_COUNT_MAX = 18;
 export const FOOD_INITIAL_COUNT = 3;

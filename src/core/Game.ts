@@ -25,8 +25,6 @@ export class Game {
   private foodSpawner = new FoodSpawner();
   private collision = new CollisionSystem();
   private mergeSystem = new MergeSystem();
-  // @ts-ignore reserved for hard mode
-  private decaySystem = new DecaySystem();
   private input: InputManager;
   private loop: GameLoop;
   private renderer = new Renderer();

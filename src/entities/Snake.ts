@@ -6,7 +6,6 @@ export class Snake {
   segments: Segment[] = [];
   direction: Direction = Direction.Right;
   alive = true;
-  distanceSinceDecay = 0;
 
   constructor() {
     this.reset();
@@ -20,7 +19,6 @@ export class Snake {
     ];
     this.direction = Direction.Right;
     this.alive = true;
-    this.distanceSinceDecay = 0;
   }
 
   get head(): Segment {
@@ -42,7 +40,6 @@ export class Snake {
       this.segments[i].pos = { ...this.segments[i - 1].pos };
     }
     this.segments[0].pos = this.nextHeadPos();
-    this.distanceSinceDecay++;
   }
 
   /** Eat food: shift positions, grow by adding food value at old tail position */
@@ -53,7 +50,6 @@ export class Snake {
     }
     this.segments[0].pos = this.nextHeadPos();
     this.segments.push({ pos: oldTailPos, value: foodValue });
-    this.distanceSinceDecay++;
   }
 
   occupies(pos: Vec2, skipHead = false): boolean {
