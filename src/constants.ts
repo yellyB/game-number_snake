@@ -65,3 +65,4 @@ export const FOOD_CHANCE_SPECIAL = 0.05;
 // Special items
 export const COLOR_FOOD_REMOVAL = '#b388ff';
 export const COLOR_FOOD_MERGE = '#ffd700';
+export const COLOR_GRID_BORDER = '#1e4a78';

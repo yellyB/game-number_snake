@@ -80,7 +80,7 @@ export class Renderer {
     } else if (state === 'ready' && showTutorial) {
       this.renderTutorial(ctx);
     } else if (state === 'ready') {
-      this.renderOverlay(ctx, `ROUND ${round}`, 'Tap or press SPACE to start', '#00d2ff');
+      this.renderOverlay(ctx, `ROUND ${round}`, 'Tap or press SPACE to start', COLOR_WALL);
     }
   }
 
@@ -196,7 +196,7 @@ export class Renderer {
     ctx.textBaseline = 'middle';
 
     // Title
-    ctx.fillStyle = '#00d2ff';
+    ctx.fillStyle = COLOR_WALL;
     ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('HOW TO PLAY', cx, 60);
@@ -210,17 +210,17 @@ export class Renderer {
     this.tSeg(ctx, x, y, 3, true, S);
     this.tBite(ctx, x + S, y + S / 2, gap);
     x += step + gap;
-    this.tFood(ctx, x, y, 1, '#4ecca3', S);
-    ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 9px monospace';
+    this.tFood(ctx, x, y, 1, COLOR_FOOD_SAFE, S);
+    ctx.fillStyle = COLOR_FOOD_SAFE; ctx.font = 'bold 9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('eat!', x + S / 2, y - 5);
     x += step + 16;
     this.tArrow(ctx, x, y + S / 2); x += 24;
-    this.tResultBg(ctx, x - 3, y - 3, 3 * step + 6, S + 6, '#4ecca3');
+    this.tResultBg(ctx, x - 3, y - 3, 3 * step + 6, S + 6, COLOR_FOOD_SAFE);
     this.tSeg(ctx, x, y, 1, false, S); x += step;
     this.tSeg(ctx, x, y, 2, false, S); x += step;
     this.tSeg(ctx, x, y, 3, true, S); x += step + 6;
-    ctx.fillStyle = '#4ecca3'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = COLOR_FOOD_SAFE; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
     ctx.fillText('✓ Grow!', x, y + S / 2);
 
     // ── Row 2: Danger eat — [1][2][3] eats (5) ✗ Death! ──
@@ -231,13 +231,13 @@ export class Renderer {
     this.tSeg(ctx, x, y, 3, true, S);
     this.tBite(ctx, x + S, y + S / 2, gap);
     x += step + gap;
-    this.tFood(ctx, x, y, 5, '#e94560', S);
-    ctx.fillStyle = '#e94560'; ctx.font = 'bold 9px monospace';
+    this.tFood(ctx, x, y, 5, COLOR_SNAKE_HEAD, S);
+    ctx.fillStyle = COLOR_SNAKE_HEAD; ctx.font = 'bold 9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('eat!', x + S / 2, y - 5);
     x += step + 16;
     this.tArrow(ctx, x, y + S / 2); x += 24;
-    ctx.fillStyle = '#e94560'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = COLOR_SNAKE_HEAD; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
     ctx.fillText('✗ Death!', x, y + S / 2);
 
     // ── Row 3: Self-collision — U-shaped snake wrapping around and hitting tail ──
@@ -272,7 +272,7 @@ export class Renderer {
       const t = (performance.now() % 800) / 800;
       const sz = 4;
       ctx.globalAlpha = 0.4 + t * 0.4;
-      ctx.fillStyle = '#e94560';
+      ctx.fillStyle = COLOR_SNAKE_HEAD;
       ctx.beginPath();
       ctx.moveTo(collCx, collY - sz);
       ctx.lineTo(collCx + sz, collY + sz);
@@ -295,7 +295,7 @@ export class Renderer {
       // Arrow and Death label (same style as other rows)
       let ax = gx + 4 * step + 14;
       this.tArrow(ctx, ax, r1 + S / 2); ax += 24;
-      ctx.fillStyle = '#e94560';
+      ctx.fillStyle = COLOR_SNAKE_HEAD;
       ctx.font = 'bold 14px monospace';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
@@ -311,15 +311,15 @@ export class Renderer {
     this.tBite(ctx, x + S, y + S / 2, gap);
     x += step + gap;
     this.tMergeItem(ctx, x, y, S);
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = COLOR_FOOD_MERGE; ctx.font = 'bold 9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('eat!', x + S / 2, y - 5);
     x += step + 16;
     this.tArrow(ctx, x, y + S / 2); x += 24;
-    this.tResultBg(ctx, x - 3, y - 3, 2 * step + 6, S + 6, '#ffd700');
+    this.tResultBg(ctx, x - 3, y - 3, 2 * step + 6, S + 6, COLOR_FOOD_MERGE);
     this.tSeg(ctx, x, y, 1, false, S); x += step;
     this.tSeg(ctx, x, y, 2, true, S); x += step + 6;
-    ctx.fillStyle = '#ffd700'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = COLOR_FOOD_MERGE; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
     ctx.fillText('Score!', x, y + S / 2);
 
     // ── Row 5: Scissors — [1][2][3] eats ✂ → [2][3] Cut! ──
@@ -331,15 +331,15 @@ export class Renderer {
     this.tBite(ctx, x + S, y + S / 2, gap);
     x += step + gap;
     this.tScissors(ctx, x, y, S);
-    ctx.fillStyle = '#b388ff'; ctx.font = 'bold 9px monospace';
+    ctx.fillStyle = COLOR_FOOD_REMOVAL; ctx.font = 'bold 9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('eat!', x + S / 2, y - 5);
     x += step + 16;
     this.tArrow(ctx, x, y + S / 2); x += 24;
-    this.tResultBg(ctx, x - 3, y - 3, 2 * step + 6, S + 6, '#b388ff');
+    this.tResultBg(ctx, x - 3, y - 3, 2 * step + 6, S + 6, COLOR_FOOD_REMOVAL);
     this.tSeg(ctx, x, y, 2, false, S); x += step;
     this.tSeg(ctx, x, y, 3, true, S); x += step + 6;
-    ctx.fillStyle = '#b388ff'; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = COLOR_FOOD_REMOVAL; ctx.font = 'bold 14px monospace'; ctx.textAlign = 'left';
     ctx.fillText('Cut!', x, y + S / 2);
 
     // ── Tap prompt ──
@@ -391,7 +391,7 @@ export class Renderer {
   }
 
   private tSeg(ctx: CanvasRenderingContext2D, x: number, y: number, value: number, isHead: boolean, s: number) {
-    ctx.fillStyle = isHead ? '#e94560' : '#533483';
+    ctx.fillStyle = isHead ? COLOR_SNAKE_HEAD : COLOR_SNAKE_BODY;
     ctx.beginPath();
     ctx.roundRect(x + 1, y + 1, s - 2, s - 2, isHead ? 4 : 2);
     ctx.fill();
@@ -423,7 +423,7 @@ export class Renderer {
     const mcx = x + s / 2;
     const mcy = y + s / 2;
     const r = s * 0.38;
-    ctx.fillStyle = '#ffd700';
+    ctx.fillStyle = COLOR_FOOD_MERGE;
     ctx.beginPath();
     ctx.moveTo(mcx, mcy - r);
     ctx.lineTo(mcx + r, mcy);
@@ -431,7 +431,7 @@ export class Renderer {
     ctx.lineTo(mcx - r, mcy);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = '#1a1a2e';
+    ctx.fillStyle = COLOR_BG;
     ctx.font = `bold ${Math.floor(s * 0.45)}px monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -439,7 +439,7 @@ export class Renderer {
   }
 
   private tScissors(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
-    ctx.fillStyle = '#b388ff';
+    ctx.fillStyle = COLOR_FOOD_REMOVAL;
     ctx.beginPath();
     ctx.arc(x + s / 2, y + s / 2, s * 0.38, 0, Math.PI * 2);
     ctx.fill();
@@ -549,20 +549,20 @@ export class Renderer {
     ctx.fillRect(0, 0, CANVAS_WIDTH, GRID_HEIGHT);
 
     const cx = CANVAS_WIDTH / 2;
-    ctx.fillStyle = '#4ecca3';
+    ctx.fillStyle = COLOR_FOOD_SAFE;
     ctx.font = 'bold 28px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`ROUND ${round} CLEAR!`, cx, GRID_HEIGHT / 2 - 30);
 
     if (bonus > 0) {
-      ctx.fillStyle = '#ffd700';
+      ctx.fillStyle = COLOR_MERGE_GLOW;
       ctx.font = 'bold 20px monospace';
       ctx.fillText(`+${bonus} BONUS`, cx, GRID_HEIGHT / 2 + 10);
     }
 
     if (headBonus > 0) {
-      ctx.fillStyle = '#e94560';
+      ctx.fillStyle = COLOR_SNAKE_HEAD;
       ctx.font = 'bold 16px monospace';
       ctx.fillText(`+${headBonus} HEAD BONUS`, cx, GRID_HEIGHT / 2 + 40);
     }

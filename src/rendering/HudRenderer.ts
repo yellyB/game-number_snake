@@ -68,7 +68,7 @@ export class HudRenderer {
     ctx.fill();
 
     if (fillRatio > 0) {
-      const barColor = fillRatio >= 1 ? '#4ecca3' : '#00d2ff';
+      const barColor = fillRatio >= 1 ? COLOR_FOOD_SAFE : COLOR_WALL;
       ctx.shadowColor = barColor;
       ctx.shadowBlur = 6;
       ctx.fillStyle = barColor;

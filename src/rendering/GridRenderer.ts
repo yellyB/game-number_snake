@@ -1,4 +1,4 @@
-import { CELL_SIZE, GRID_COLS, PLAY_ROWS, PLAY_Y_OFFSET, COLOR_GRID, COLOR_GRID_LINE } from '../constants';
+import { CELL_SIZE, GRID_COLS, PLAY_ROWS, PLAY_Y_OFFSET, COLOR_GRID, COLOR_GRID_LINE, COLOR_GRID_BORDER } from '../constants';
 
 export class GridRenderer {
   render(ctx: CanvasRenderingContext2D) {
@@ -29,7 +29,7 @@ export class GridRenderer {
     }
 
     // Play area border
-    ctx.strokeStyle = '#1e4a78';
+    ctx.strokeStyle = COLOR_GRID_BORDER;
     ctx.lineWidth = 2;
     ctx.strokeRect(0, startY, width, height);
   }
