@@ -1,8 +1,14 @@
 import { Snake } from '../entities/Snake';
 import { CANVAS_WIDTH, CELL_SIZE, HUD_ROWS, COLOR_HUD_BG, COLOR_WALL, COLOR_FOOD_SAFE } from '../constants';
+import { SpriteGenerator } from './SpriteGenerator';
 
 export class HudRenderer {
-  static readonly SOUND_ICON_RECT = { x: 4, y: 4, w: 22, h: 22 };
+  static readonly SOUND_ICON_RECT = { x: 4, y: 4, w: 44, h: 44 };
+  private sprites: SpriteGenerator | null = null;
+
+  setSprites(sprites: SpriteGenerator) {
+    this.sprites = sprites;
+  }
 
   render(
     ctx: CanvasRenderingContext2D,
@@ -81,50 +87,54 @@ export class HudRenderer {
   }
 
   private renderSoundIcon(ctx: CanvasRenderingContext2D, muted: boolean) {
-    const cx = 15;
-    const cy = 15;
+    const rect = HudRenderer.SOUND_ICON_RECT;
 
-    ctx.save();
-    ctx.globalAlpha = muted ? 0.4 : 1;
-
-    // Speaker body
-    const color = muted ? '#555' : '#aaa';
-    ctx.fillStyle = color;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.lineCap = 'round';
-
-    // Speaker cone (trapezoid + rectangle)
-    ctx.beginPath();
-    ctx.moveTo(cx - 5, cy - 2);
-    ctx.lineTo(cx - 5, cy + 2);
-    ctx.lineTo(cx - 2, cy + 2);
-    ctx.lineTo(cx + 2, cy + 5);
-    ctx.lineTo(cx + 2, cy - 5);
-    ctx.lineTo(cx - 2, cy - 2);
-    ctx.closePath();
-    ctx.fill();
-
-    if (muted) {
-      // X mark
-      ctx.beginPath();
-      ctx.moveTo(cx + 5, cy - 3);
-      ctx.lineTo(cx + 10, cy + 3);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(cx + 10, cy - 3);
-      ctx.lineTo(cx + 5, cy + 3);
-      ctx.stroke();
+    if (this.sprites) {
+      ctx.save();
+      ctx.globalAlpha = muted ? 0.4 : 1;
+      ctx.imageSmoothingEnabled = false;
+      const sprite = muted ? this.sprites.soundOff : this.sprites.soundOn;
+      ctx.drawImage(sprite as any, rect.x, rect.y, rect.w, rect.h);
+      ctx.imageSmoothingEnabled = true;
+      ctx.restore();
     } else {
-      // Sound waves (arcs)
+      // Fallback procedural drawing
+      const cx = 15;
+      const cy = 15;
+      ctx.save();
+      ctx.globalAlpha = muted ? 0.4 : 1;
+      const color = muted ? '#555' : '#aaa';
+      ctx.fillStyle = color;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.arc(cx + 2, cy, 5, -Math.PI / 4, Math.PI / 4);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(cx + 2, cy, 9, -Math.PI / 4, Math.PI / 4);
-      ctx.stroke();
+      ctx.moveTo(cx - 5, cy - 2);
+      ctx.lineTo(cx - 5, cy + 2);
+      ctx.lineTo(cx - 2, cy + 2);
+      ctx.lineTo(cx + 2, cy + 5);
+      ctx.lineTo(cx + 2, cy - 5);
+      ctx.lineTo(cx - 2, cy - 2);
+      ctx.closePath();
+      ctx.fill();
+      if (muted) {
+        ctx.beginPath();
+        ctx.moveTo(cx + 5, cy - 3);
+        ctx.lineTo(cx + 10, cy + 3);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx + 10, cy - 3);
+        ctx.lineTo(cx + 5, cy + 3);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(cx + 2, cy, 5, -Math.PI / 4, Math.PI / 4);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(cx + 2, cy, 9, -Math.PI / 4, Math.PI / 4);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
-
-    ctx.restore();
   }
 }

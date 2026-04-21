@@ -3,8 +3,15 @@ import { MergeSystem } from '../systems/MergeSystem';
 import { Direction } from '../types';
 import { CELL_SIZE, COLOR_SNAKE_HEAD, COLOR_MERGE_GLOW, GRID_COLS } from '../constants';
 import { getValueColor } from '../utils/colors';
+import { SpriteGenerator } from './SpriteGenerator';
 
 export class SnakeRenderer {
+  private sprites: SpriteGenerator | null = null;
+
+  setSprites(sprites: SpriteGenerator) {
+    this.sprites = sprites;
+  }
+
   render(ctx: CanvasRenderingContext2D, snake: Snake, mergeSystem: MergeSystem) {
     const mergeInfo = mergeSystem.getMergeAnimInfo();
 
@@ -32,7 +39,7 @@ export class SnakeRenderer {
       // Draw segment (and ghost copy at wrap edge if near boundary)
       const offsets = this.getWrapOffsets(seg.pos.x, seg.pos.y);
       for (const [ox, oy] of offsets) {
-        this.drawSegment(ctx, ox, oy, seg.value, isHead, scale, glowing);
+        this.drawSegment(ctx, ox, oy, seg.value, isHead, scale, glowing, isHead ? snake.direction : undefined);
         if (isHead) this.drawDirectionArrow(ctx, ox, oy, snake.direction);
       }
     }
@@ -54,6 +61,7 @@ export class SnakeRenderer {
   private drawSegment(
     ctx: CanvasRenderingContext2D, x: number, y: number,
     value: number, isHead: boolean, scale: number, glowing: boolean,
+    direction?: Direction,
   ) {
     const pad = CELL_SIZE * (1 - scale) * 0.5;
     const size = CELL_SIZE * scale;
@@ -75,20 +83,20 @@ export class SnakeRenderer {
       ctx.shadowBlur = 0;
     }
 
-    // Number text
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${Math.floor(14 * scale)}px monospace`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(value), x + CELL_SIZE / 2, y + CELL_SIZE / 2);
-
-    // Head indicator
+    // Head indicator (white border)
     if (isHead) {
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
       this.roundRect(ctx, x + 2, y + 2, CELL_SIZE - 4, CELL_SIZE - 4, 8);
       ctx.stroke();
     }
+
+    // Number text
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${Math.floor(14 * scale)}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(value), x + CELL_SIZE / 2, y + CELL_SIZE / 2);
   }
 
   private drawDirectionArrow(ctx: CanvasRenderingContext2D, x: number, y: number, dir: Direction) {

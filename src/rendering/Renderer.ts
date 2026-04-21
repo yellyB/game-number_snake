@@ -4,6 +4,7 @@ import { FoodRenderer } from './FoodRenderer';
 import { WallRenderer } from './WallRenderer';
 import { MergeAnimator } from './MergeAnimator';
 import { HudRenderer } from './HudRenderer';
+import { SpriteGenerator } from './SpriteGenerator';
 import { Snake } from '../entities/Snake';
 import { FoodManager } from '../entities/Food';
 import { MergeSystem } from '../systems/MergeSystem';
@@ -23,6 +24,14 @@ export class Renderer {
   private wallRenderer = new WallRenderer();
   mergeAnimator = new MergeAnimator();
   private hudRenderer = new HudRenderer();
+  private sprites: SpriteGenerator;
+
+  constructor() {
+    this.sprites = new SpriteGenerator();
+    this.snakeRenderer.setSprites(this.sprites);
+    this.foodRenderer.setSprites(this.sprites);
+    this.hudRenderer.setSprites(this.sprites);
+  }
 
   render(
     ctx: CanvasRenderingContext2D,
@@ -148,14 +157,9 @@ export class Renderer {
     ctx.fillStyle = COLOR_HUD_BG;
     ctx.fillRect(0, GRID_HEIGHT, CANVAS_WIDTH, CANVAS_HEIGHT - GRID_HEIGHT);
 
-    const arrows: [Direction, string][] = [
-      [Direction.Up, '▲'],
-      [Direction.Down, '▼'],
-      [Direction.Left, '◀'],
-      [Direction.Right, '▶'],
-    ];
+    const dirs = [Direction.Up, Direction.Down, Direction.Left, Direction.Right];
 
-    for (const [dir, symbol] of arrows) {
+    for (const dir of dirs) {
       const r = DPAD_RECTS[dir];
       const isActive = dir === activeDir;
 
@@ -174,11 +178,16 @@ export class Renderer {
       ctx.lineWidth = isActive ? 2 : 1.5;
       ctx.stroke();
 
-      ctx.fillStyle = isActive ? 'rgba(0,210,255,0.9)' : 'rgba(255,255,255,0.35)';
-      ctx.font = `bold ${isActive ? 22 : 24}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(symbol, r.x + r.w / 2, r.y + r.h / 2);
+      // Pixel art arrow sprite
+      const sprite = isActive ? this.sprites.dpadArrowActive[dir] : this.sprites.dpadArrow[dir];
+      const spriteSize = isActive ? 38 : 42;
+      const sx = r.x + (r.w - spriteSize) / 2;
+      const sy = r.y + (r.h - spriteSize) / 2;
+      ctx.globalAlpha = isActive ? 0.9 : 0.35;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sprite as any, sx, sy, spriteSize, spriteSize);
+      ctx.imageSmoothingEnabled = true;
+      ctx.globalAlpha = 1;
     }
   }
 

@@ -1,10 +1,17 @@
 import { FoodManager } from '../entities/Food';
 import { Snake } from '../entities/Snake';
 import { CELL_SIZE, COLOR_BG, COLOR_FOOD_SAFE, COLOR_FOOD_DANGER, COLOR_FOOD_MERGEABLE, COLOR_FOOD_REMOVAL, COLOR_FOOD_MERGE } from '../constants';
+import { SpriteGenerator } from './SpriteGenerator';
 
 const SPAWN_ANIM_MS = 250;
 
 export class FoodRenderer {
+  private sprites: SpriteGenerator | null = null;
+
+  setSprites(sprites: SpriteGenerator) {
+    this.sprites = sprites;
+  }
+
   render(ctx: CanvasRenderingContext2D, foodManager: FoodManager, snake: Snake) {
     const headValue = snake.head.value;
     const tailValue = snake.tail.value;
@@ -42,12 +49,17 @@ export class FoodRenderer {
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
 
-        // ✂ icon
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('✂', cx, cy);
+        // Scissors sprite
+        if (this.sprites) {
+          const spriteSize = radius * 2;
+          ctx.drawImage(this.sprites.scissors as any, cx - spriteSize / 2, cy - spriteSize / 2, spriteSize, spriteSize);
+        } else {
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('✂', cx, cy);
+        }
         if (animating) ctx.restore();
         continue;
       }
@@ -71,12 +83,17 @@ export class FoodRenderer {
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
 
-        // "M" label
-        ctx.fillStyle = COLOR_BG;
-        ctx.font = 'bold 14px monospace';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('M', cx, cy);
+        // Merge sparkle sprite
+        if (this.sprites) {
+          const spriteSize = radius * 2;
+          ctx.drawImage(this.sprites.mergeTrigger as any, cx - spriteSize / 2, cy - spriteSize / 2, spriteSize, spriteSize);
+        } else {
+          ctx.fillStyle = COLOR_BG;
+          ctx.font = 'bold 14px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('M', cx, cy);
+        }
         if (animating) ctx.restore();
         continue;
       }
