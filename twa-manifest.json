@@ -20,8 +20,8 @@
     "path": "./android.keystore",
     "alias": "numsnake"
   },
-  "appVersionName": "0.2.0",
-  "appVersionCode": 3,
+  "appVersionName": "0.2.1",
+  "appVersionCode": 4,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://yellyb.github.io/game-number_snake/manifest.webmanifest",
@@ -43,5 +43,5 @@
   "additionalTrustedOrigins": [],
   "retainedBundles": [],
   "displayOverride": [],
-  "appVersion": "0.2.0"
+  "appVersion": "0.2.1"
 }
