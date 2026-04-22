@@ -50,6 +50,7 @@ export class Renderer {
     highScore = 0,
     chainCombo?: { count: number; startTime: number } | null,
     muted = false,
+    displayDirection?: Direction,
   ) {
     ctx.fillStyle = COLOR_BG;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -58,7 +59,7 @@ export class Renderer {
     this.grid.render(ctx);
     this.wallRenderer.render(ctx);
     this.foodRenderer.render(ctx, food, snake);
-    this.snakeRenderer.render(ctx, snake, mergeSystem);
+    this.snakeRenderer.render(ctx, snake, mergeSystem, displayDirection);
 
     this.mergeAnimator.update(1 / 60);
     this.mergeAnimator.render(ctx);

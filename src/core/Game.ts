@@ -428,6 +428,7 @@ export class Game {
       this.highScore,
       this.chainCombo,
       this.sound.muted,
+      this.input.getDisplayDirection(),
     );
   }
 }
