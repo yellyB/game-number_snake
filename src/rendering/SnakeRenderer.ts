@@ -4,8 +4,9 @@ import { Direction } from '../types';
 import { CELL_SIZE, COLOR_SNAKE_HEAD, COLOR_MERGE_GLOW, GRID_COLS } from '../constants';
 import { getValueColor } from '../utils/colors';
 export class SnakeRenderer {
-  render(ctx: CanvasRenderingContext2D, snake: Snake, mergeSystem: MergeSystem) {
+  render(ctx: CanvasRenderingContext2D, snake: Snake, mergeSystem: MergeSystem, displayDirection?: Direction) {
     const mergeInfo = mergeSystem.getMergeAnimInfo();
+    const headDir = displayDirection ?? snake.direction;
 
     for (let i = snake.segments.length - 1; i >= 0; i--) {
       const seg = snake.segments[i];
@@ -32,7 +33,7 @@ export class SnakeRenderer {
       const offsets = this.getWrapOffsets(seg.pos.x, seg.pos.y);
       for (const [ox, oy] of offsets) {
         this.drawSegment(ctx, ox, oy, seg.value, isHead, scale, glowing);
-        if (isHead) this.drawDirectionArrow(ctx, ox, oy, snake.direction);
+        if (isHead) this.drawDirectionArrow(ctx, ox, oy, headDir);
       }
     }
   }

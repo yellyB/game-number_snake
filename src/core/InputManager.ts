@@ -196,6 +196,11 @@ export class InputManager {
     return this.currentDir;
   }
 
+  /** Direction to display on the head — reflects buffered input before the next tick */
+  getDisplayDirection(): Direction {
+    return this.bufferedDir ?? this.currentDir;
+  }
+
   setDirection(dir: Direction) {
     this.currentDir = dir;
   }
